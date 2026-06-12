@@ -21,10 +21,35 @@ public class PrenotazioneController {
         this.notificaController = notificaController;
     }
 
-    /*public StatisticheDTO calcolaReportStatistiche(LocalDate dataInizio, LocalDate dataFine) {
+    public boolean setStatoPrenotazione(Long idPrenotazione, com.ambulatorio.entity.enums.StatoPrenotazione nuovoStato) {
+        try {
+            com.ambulatorio.database.GestorePersistenza gestore = new com.ambulatorio.database.GestorePersistenza();
+            com.ambulatorio.entity.Prenotazione prenotazione = gestore.trovaPerId(com.ambulatorio.entity.Prenotazione.class, idPrenotazione);
 
-        Map<String, Object> filtraPeriodo = new HashMap<>();
+            if (prenotazione != null) {
+                prenotazione.setStato(nuovoStato);
+                gestore.aggiorna(prenotazione);
 
+                // Se la prenotazione viene annullata, la fascia oraria torna libera
+                if (nuovoStato == com.ambulatorio.entity.enums.StatoPrenotazione.ANNULLATA) {
+                    com.ambulatorio.entity.FasciaOraria fascia = prenotazione.getFasciaOraria();
+                    if (fascia != null) {
+                        fascia.setStato(com.ambulatorio.entity.enums.StatoFascia.LIBERA);
+                        gestore.aggiorna(fascia);
+                    }
+                }
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
-    }*/
+    public java.util.List<com.ambulatorio.entity.Prenotazione> getPrenotazioniMedico(Long idMedico) {
+        com.ambulatorio.database.GestorePersistenza gestore = new com.ambulatorio.database.GestorePersistenza();
+        // Cerchiamo le prenotazioni filtrando per il medico della fascia oraria
+        return gestore.cercaPerCampo(com.ambulatorio.entity.Prenotazione.class, "fasciaOraria.medico.id", idMedico);
+    }
 }
