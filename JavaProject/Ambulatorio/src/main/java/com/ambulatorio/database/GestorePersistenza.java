@@ -219,4 +219,18 @@ public class GestorePersistenza {
         }
     }
 
+    public <T> Long conta(Class<T> classe) {
+        EntityManager em = JpaUtil.getInstance().getEntityManager();
+
+        try {
+            // Costruiamo una query JPQL del tipo: SELECT COUNT(e) FROM Medico e
+            String jpql = "SELECT COUNT(e) FROM " + classe.getSimpleName() + " e";
+
+            return em.createQuery(jpql, Long.class).getSingleResult();
+
+        } finally {
+            em.close();
+        }
+    }
+
 }

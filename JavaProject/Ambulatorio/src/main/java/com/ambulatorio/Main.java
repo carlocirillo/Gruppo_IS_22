@@ -1,6 +1,8 @@
 package com.ambulatorio;
 
 import com.ambulatorio.boundary.MainPage;
+import com.ambulatorio.database.GestorePersistenza;
+import com.ambulatorio.database.JpaUtil;
 
 import javax.swing.*;
 
@@ -18,5 +20,16 @@ public class Main {
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
+        GestorePersistenza gestore = new GestorePersistenza();
+
+        try {
+            InizializzatoreDatabase inizializzatore = new InizializzatoreDatabase(gestore);
+            inizializzatore.popolaDatiDiTest();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            System.out.println("Chiusura delle connessioni...");
+            JpaUtil.getInstance().chiudi()  ;
+        }
     }
 }
