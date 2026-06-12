@@ -128,7 +128,7 @@ public class AggiornaStatoPrenotazioneView extends JFrame {
 
         if (scelta == JOptionPane.YES_OPTION) {
             Long idPrenotazione = (Long) tblPrenotazioni.getValueAt(selectedRow, 0);
-            boolean successo = controller.aggiornaStatoPrenotazione(idPrenotazione, nuovoStato);
+            boolean successo = controller.setStatoPrenotazione(idPrenotazione, nuovoStato);
             
             if (successo) {
                 JOptionPane.showMessageDialog(this, "stato modificato");
