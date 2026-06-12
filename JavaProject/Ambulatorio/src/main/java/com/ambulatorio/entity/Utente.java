@@ -1,6 +1,5 @@
 package com.ambulatorio.entity;
 
-import com.ambulatorio.entity.enums.Ruolo;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,16 +26,12 @@ public class Utente {
 
     private String numeroCellulare;
 
-    @Enumerated(EnumType.STRING)
-    private Ruolo ruolo;
-
     @Override
     public String toString() {
         return "Utente{" +
                 "id = " + id +
                 ", nome='" + nome + '\'' +
                 ", cognome='" + cognome + '\'' +
-                ", ruolo='" + ruolo + '\'' +
                 "}";
     }
 }
