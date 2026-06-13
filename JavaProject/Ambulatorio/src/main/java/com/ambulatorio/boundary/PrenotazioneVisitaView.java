@@ -4,8 +4,11 @@ import com.ambulatorio.controller.CalendarioController;
 import com.ambulatorio.controller.MedicoController;
 import com.ambulatorio.controller.NotificaController;
 import com.ambulatorio.controller.PrenotazioneController;
+import com.ambulatorio.database.GestorePersistenza;
+import com.ambulatorio.entity.FasciaOraria;
+import com.ambulatorio.entity.Medico;
+import com.ambulatorio.entity.enums.StatoFascia;
 
-import javax.swing.BorderFactory;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -15,41 +18,44 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
-import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Comparator;
 import java.util.List;
 
 /**
  * Boundary del caso d'uso PrenotaVisita.
  *
- * La schermata consente al paziente autenticato di scegliere specializzazione,
- * medico e fascia oraria disponibile, poi conferma la prenotazione.
+ * Questa classe è collegata al file PrenotazioneVisitaView.form creato con
+ * IntelliJ Swing UI Designer. Nel file .java viene gestita solo la logica
+ * degli eventi e il collegamento con i controller.
  */
 public class PrenotazioneVisitaView extends JFrame {
 
     public JPanel contentPane;
-
-    private final Long idPazienteAutenticato;
-    private final MedicoController medicoController;
-    private final CalendarioController calendarioController;
-    private final PrenotazioneController prenotazioneController;
-
+    private JLabel lblTitolo;
+    private JLabel lblSpecializzazione;
+    private JLabel lblMedico;
+    private JLabel lblFasce;
+    private JLabel lblRiepilogo;
     private JComboBox<MedicoController.SpecializzazioneInfo> cmbSpecializzazioni;
     private JComboBox<MedicoController.MedicoInfo> cmbMedici;
-    private JList<CalendarioController.FasciaOrariaInfo> listaFasce;
-    private DefaultListModel<CalendarioController.FasciaOrariaInfo> modelloFasce;
+    private JList<FasciaOrariaItem> listaFasce;
     private JTextArea txtRiepilogo;
     private JButton btnAggiornaFasce;
     private JButton btnConferma;
 
+    private DefaultListModel<FasciaOrariaItem> modelloFasce;
+
+    private final Long idPazienteAutenticato;
+    private final MedicoController medicoController;
+    private final PrenotazioneController prenotazioneController;
+    private final GestorePersistenza gestorePersistenza;
+
     /**
-     * Costruttore utile solo per prove rapide se il login non passa ancora il paziente.
+     * Costruttore provvisorio utile finché il login non passa ancora il paziente autenticato.
      * Nel flusso definitivo va usato PrenotazioneVisitaView(Long idPazienteAutenticato).
      */
     public PrenotazioneVisitaView() {
@@ -59,14 +65,14 @@ public class PrenotazioneVisitaView extends JFrame {
     public PrenotazioneVisitaView(Long idPazienteAutenticato) {
         this.idPazienteAutenticato = idPazienteAutenticato;
         this.medicoController = new MedicoController();
-        this.calendarioController = new CalendarioController();
         this.prenotazioneController = new PrenotazioneController(
-                calendarioController,
+                new CalendarioController(),
                 new NotificaController()
         );
+        this.gestorePersistenza = new GestorePersistenza();
 
-        inizializzaComponenti();
         inizializzaFrame();
+        inizializzaComponenti();
         collegaEventi();
         caricaSpecializzazioni();
     }
@@ -80,66 +86,17 @@ public class PrenotazioneVisitaView extends JFrame {
     }
 
     private void inizializzaComponenti() {
-        contentPane = new JPanel(new BorderLayout(12, 12));
-        contentPane.setBorder(BorderFactory.createEmptyBorder(18, 18, 18, 18));
-
-        JLabel titolo = new JLabel("Prenotazione visita");
-        titolo.setFont(titolo.getFont().deriveFont(22f));
-        contentPane.add(titolo, BorderLayout.NORTH);
-
-        JPanel formPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints vincoli = new GridBagConstraints();
-        vincoli.insets = new Insets(8, 8, 8, 8);
-        vincoli.fill = GridBagConstraints.HORIZONTAL;
-
-        cmbSpecializzazioni = new JComboBox<>();
-        cmbMedici = new JComboBox<>();
-        btnAggiornaFasce = new JButton("Mostra fasce disponibili");
-        btnConferma = new JButton("Conferma prenotazione");
-
         modelloFasce = new DefaultListModel<>();
-        listaFasce = new JList<>(modelloFasce);
+        listaFasce.setModel(modelloFasce);
         listaFasce.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        txtRiepilogo = new JTextArea(7, 40);
         txtRiepilogo.setEditable(false);
         txtRiepilogo.setLineWrap(true);
         txtRiepilogo.setWrapStyleWord(true);
 
-        aggiungiRiga(formPanel, vincoli, 0, "Specializzazione", cmbSpecializzazioni);
-        aggiungiRiga(formPanel, vincoli, 1, "Medico", cmbMedici);
-        aggiungiRiga(formPanel, vincoli, 2, "Fasce orarie", new JScrollPane(listaFasce));
-
-        vincoli.gridx = 1;
-        vincoli.gridy = 3;
-        formPanel.add(btnAggiornaFasce, vincoli);
-
-        vincoli.gridy = 4;
-        formPanel.add(btnConferma, vincoli);
-
-        vincoli.gridx = 0;
-        vincoli.gridy = 5;
-        vincoli.gridwidth = 2;
-        vincoli.weightx = 1;
-        formPanel.add(new JScrollPane(txtRiepilogo), vincoli);
-
-        contentPane.add(formPanel, BorderLayout.CENTER);
-    }
-
-    private void aggiungiRiga(JPanel pannello,
-                              GridBagConstraints vincoli,
-                              int riga,
-                              String etichetta,
-                              java.awt.Component componente) {
-        vincoli.gridx = 0;
-        vincoli.gridy = riga;
-        vincoli.gridwidth = 1;
-        vincoli.weightx = 0;
-        pannello.add(new JLabel(etichetta), vincoli);
-
-        vincoli.gridx = 1;
-        vincoli.weightx = 1;
-        pannello.add(componente, vincoli);
+        cmbMedici.setEnabled(false);
+        btnAggiornaFasce.setEnabled(false);
+        btnConferma.setEnabled(false);
     }
 
     private void collegaEventi() {
@@ -169,27 +126,18 @@ public class PrenotazioneVisitaView extends JFrame {
         return (MedicoController.MedicoInfo) cmbMedici.getSelectedItem();
     }
 
-    public void mostraFasceOrarie(List<CalendarioController.FasciaOrariaInfo> fasce) {
+    public void mostraFasceOrarie(List<FasciaOrariaItem> fasce) {
         modelloFasce.clear();
 
-        for (CalendarioController.FasciaOrariaInfo fascia : fasce) {
+        for (FasciaOrariaItem fascia : fasce) {
             modelloFasce.addElement(fascia);
         }
+
+        btnConferma.setEnabled(!fasce.isEmpty());
     }
 
-    public CalendarioController.FasciaOrariaInfo leggiFasciaSelezionata() {
+    public FasciaOrariaItem leggiFasciaSelezionata() {
         return listaFasce.getSelectedValue();
-    }
-
-    public void mostraRiepilogo(PrenotazioneController.PrenotazioneInfo prenotazione) {
-        txtRiepilogo.setText(
-                "Prenotazione confermata.\n"
-                        + "ID prenotazione: " + prenotazione.getId() + "\n"
-                        + "Medico: " + prenotazione.getMedico() + "\n"
-                        + "Data visita: " + prenotazione.getDataVisita() + "\n"
-                        + "Orario: " + prenotazione.getOraInizio() + " - " + prenotazione.getOraFine() + "\n"
-                        + "Stato: " + prenotazione.getStato()
-        );
     }
 
     public void mostraMessaggio(String messaggio) {
@@ -202,6 +150,11 @@ public class PrenotazioneVisitaView extends JFrame {
 
         if (specializzazioni.isEmpty()) {
             mostraMessaggio("Non sono presenti specializzazioni configurate nel sistema.");
+            cmbMedici.setEnabled(false);
+            btnAggiornaFasce.setEnabled(false);
+        } else {
+            cmbMedici.setEnabled(true);
+            btnAggiornaFasce.setEnabled(true);
         }
     }
 
@@ -220,6 +173,7 @@ public class PrenotazioneVisitaView extends JFrame {
 
         mostraMedici(medici);
         mostraFasceOrarie(List.of());
+        txtRiepilogo.setText("");
 
         if (medici.isEmpty()) {
             mostraMessaggio("Non sono presenti medici per la specializzazione selezionata.");
@@ -234,17 +188,51 @@ public class PrenotazioneVisitaView extends JFrame {
             return;
         }
 
-        List<CalendarioController.FasciaOrariaInfo> fasce = calendarioController.getDisponibilitaPerMedico(
-                medico.getId(),
-                LocalDate.now(),
-                LocalDate.now().plusMonths(2)
-        );
-
+        List<FasciaOrariaItem> fasce = getFasceLiberePerMedico(medico.getId());
         mostraFasceOrarie(fasce);
+        txtRiepilogo.setText("");
 
         if (fasce.isEmpty()) {
             mostraMessaggio("Non ci sono fasce orarie disponibili per il medico selezionato.");
         }
+    }
+
+    private List<FasciaOrariaItem> getFasceLiberePerMedico(Long idMedico) {
+        Medico medico = gestorePersistenza.trovaPerId(Medico.class, idMedico);
+
+        if (medico == null) {
+            return List.of();
+        }
+
+        List<FasciaOraria> fasce = gestorePersistenza.cercaPerCampo(
+                FasciaOraria.class,
+                "medico",
+                medico
+        );
+
+        return fasce.stream()
+                .filter(fascia -> fascia.getStato() == StatoFascia.LIBERA)
+                .filter(fascia -> fascia.getData() == null || !fascia.getData().isBefore(LocalDate.now()))
+                .sorted(Comparator.comparing(FasciaOraria::getData)
+                        .thenComparing(FasciaOraria::getOraInizio))
+                .map(this::toFasciaOrariaItem)
+                .toList();
+    }
+
+    private FasciaOrariaItem toFasciaOrariaItem(FasciaOraria fascia) {
+        String medico = "";
+
+        if (fascia.getMedico() != null) {
+            medico = fascia.getMedico().getCognome() + " " + fascia.getMedico().getNome();
+        }
+
+        return new FasciaOrariaItem(
+                fascia.getId(),
+                fascia.getData(),
+                fascia.getOraInizio(),
+                fascia.getOraFine(),
+                medico
+        );
     }
 
     private void confermaPrenotazione() {
@@ -253,14 +241,14 @@ public class PrenotazioneVisitaView extends JFrame {
             return;
         }
 
-        CalendarioController.FasciaOrariaInfo fascia = leggiFasciaSelezionata();
+        FasciaOrariaItem fascia = leggiFasciaSelezionata();
 
         if (fascia == null) {
             mostraMessaggio("Seleziona una fascia oraria prima di confermare la prenotazione.");
             return;
         }
 
-        boolean disponibile = calendarioController.verificaDisponibilitaFascia(fascia.getId());
+        boolean disponibile = prenotazioneController.verificaDisponibilitaFascia(fascia.getId());
 
         if (!disponibile) {
             mostraMessaggio("La fascia oraria selezionata non è più disponibile. Scegli una nuova fascia.");
@@ -268,19 +256,71 @@ public class PrenotazioneVisitaView extends JFrame {
             return;
         }
 
-        PrenotazioneController.PrenotazioneInfo prenotazione = prenotazioneController.effettuaPrenotazioneDettagli(
+        boolean prenotazioneEffettuata = prenotazioneController.effettuaPrenotazione(
                 idPazienteAutenticato,
                 fascia.getId()
         );
 
-        if (prenotazione == null) {
+        if (!prenotazioneEffettuata) {
             mostraMessaggio("Prenotazione non completata. Verifica paziente e fascia oraria selezionata.");
             caricaFasceDisponibili();
             return;
         }
 
-        mostraRiepilogo(prenotazione);
+        mostraRiepilogo(fascia);
         mostraMessaggio("Prenotazione registrata correttamente. È stata inviata una notifica di conferma.");
         caricaFasceDisponibili();
+    }
+
+    private void mostraRiepilogo(FasciaOrariaItem fascia) {
+        txtRiepilogo.setText(
+                "Prenotazione confermata.\n"
+                        + "Paziente ID: " + idPazienteAutenticato + "\n"
+                        + "Medico: " + fascia.getMedico() + "\n"
+                        + "Data visita: " + fascia.getData() + "\n"
+                        + "Orario: " + fascia.getOraInizio() + " - " + fascia.getOraFine() + "\n"
+                        + "Stato: PRENOTATA"
+        );
+    }
+
+    private static class FasciaOrariaItem {
+        private final Long id;
+        private final LocalDate data;
+        private final LocalTime oraInizio;
+        private final LocalTime oraFine;
+        private final String medico;
+
+        private FasciaOrariaItem(Long id, LocalDate data, LocalTime oraInizio, LocalTime oraFine, String medico) {
+            this.id = id;
+            this.data = data;
+            this.oraInizio = oraInizio;
+            this.oraFine = oraFine;
+            this.medico = medico;
+        }
+
+        private Long getId() {
+            return id;
+        }
+
+        private LocalDate getData() {
+            return data;
+        }
+
+        private LocalTime getOraInizio() {
+            return oraInizio;
+        }
+
+        private LocalTime getOraFine() {
+            return oraFine;
+        }
+
+        private String getMedico() {
+            return medico;
+        }
+
+        @Override
+        public String toString() {
+            return data + " | " + oraInizio + " - " + oraFine + " | " + medico;
+        }
     }
 }
