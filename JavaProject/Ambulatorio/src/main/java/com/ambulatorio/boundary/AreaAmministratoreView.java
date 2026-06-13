@@ -1,5 +1,9 @@
 package com.ambulatorio.boundary;
 
+import com.ambulatorio.DTO.response.StatisticheDto;
+import com.ambulatorio.controller.PrenotazioneController;
+import com.ambulatorio.entity.enums.StatoPrenotazione;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
@@ -34,6 +38,8 @@ public class AreaAmministratoreView {
     private JTable tblMetriche;
     private JScrollPane scrollPane;
 
+    private final PrenotazioneController prenotazioneController;
+
     private void createUIComponents() {
         tblMetriche = new JTable();
 
@@ -43,7 +49,9 @@ public class AreaAmministratoreView {
         tblMetriche.setModel(model);
     }
 
-    public AreaAmministratoreView() {
+    public AreaAmministratoreView(PrenotazioneController prenotazioneController) {
+
+        this.prenotazioneController = prenotazioneController;
 
         // Il panel associato al calcolo delle metriche deve essere inizialmente non visibile
         elaborazionePanel.setVisible(false);
@@ -106,21 +114,69 @@ public class AreaAmministratoreView {
             return;
         }
 
-        // Verifica che dataInizio non sia antecedente a dataCreazioneambulatorio, in quel caso parte dal limite storico
+        // Verifica che dataInizio non sia antecedente a dataCreazioneAmbulatorio, in quel caso parte dal limite storico
         if(dataInizio.isBefore(dataCreazioneAmbulatorio)){
 
             dataInizio = dataCreazioneAmbulatorio;
             dataInizioTxt.setText("10/10/2015");
         }
 
-        // Panel dei risultati visibile
+        // Costruzione del report tramite controller
+        StatisticheDto report = prenotazioneController.calcolaReportStatistiche(dataInizio, dataFine);
+
+        if(report.prenotazioniTotaliPerMedico().isEmpty() && report.pazientiUniciPrenotazioni() == 0){
+
+            // Report vuoto, mostra un messaggio informativo
+            JOptionPane.showMessageDialog(contentPane, "Nessuna prenotazione registrata nel periodo selezionato.",
+                    "NESSUN DATO DISPONIBILE", JOptionPane.INFORMATION_MESSAGE);
+
+            return;
+        }
+
+        // Se invece ci sono dati, aggiorna la grafica di elaborazione
+        // Recupera il numero totali di annullamenti
+        int numAnnullamenti = report.prenotazioniPerStato().getOrDefault("ANNULLATA", 0);
+
+        // Recupera il numero totale di Prenotazione sommando le prenotazioni per giorno
+        int totalePrenotazioni = 0;
+        for(int conteggio : report.prenotazioniTotaliPerGiorno().values()){
+
+            totalePrenotazioni += conteggio;
+        }
+
+        // Calcola il tasso di saturazione e modifica la progress bar
+        int calcoloSaturazione = 0;
+        if (numAnnullamenti > 0) {
+
+            calcoloSaturazione = totalePrenotazioni / numAnnullamenti;
+        }
+        progressBarSaturazione.setValue(calcoloSaturazione);
+
+        // Aggiorna le lbl di testo
+        lblNumPrenotazioni.setText(String.valueOf(totalePrenotazioni));
+        lblNumAnnullamenti.setText(String.valueOf(numAnnullamenti));
+
+        // Recupera il model della table e la svuota da vecchi risultati
+        DefaultTableModel model = (DefaultTableModel) tblMetriche.getModel();
+        model.setRowCount(0);
+
+        // Itera sulle chiavi della map
+        for(String nomeSpecializzazione : report.prenotazioniTotaliPerSpec().keySet()){
+
+            // Tramite le chiave ottengo il valore associato (Il numero di Prenotazioni)
+            Integer numeroPrenotazioni = report.prenotazioniTotaliPerSpec().get(nomeSpecializzazione);
+
+            // Costruisce un oggetto riga da aggiungerw alla tabella
+            Object[] riga = new Object[]{nomeSpecializzazione, numeroPrenotazioni};
+            model.addRow(riga);
+        }
+
+        // Rende visibile il panel relativo all'elaborazioni
         elaborazionePanel.setVisible(true);
 
         // Aggiorna la grafica del panel principale
         contentPane.revalidate();
         contentPane.repaint();
-
-
     }
 
     private String isDataValida(String testoData) {

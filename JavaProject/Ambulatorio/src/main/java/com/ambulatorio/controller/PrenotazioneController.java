@@ -1,41 +1,47 @@
 package com.ambulatorio.controller;
 
-import com.ambulatorio.dto.response.StatisticheDto;
+import com.ambulatorio.DTO.response.StatisticheDto;
 import com.ambulatorio.boundary.AreaAmministratoreView;
-import com.ambulatorio.entity.Paziente;
-import com.ambulatorio.entity.Amministratore;
-import com.ambulatorio.entity.Medico;
+import com.ambulatorio.database.GestorePersistenza;
+import com.ambulatorio.entity.*;
+import com.ambulatorio.entity.enums.StatoPrenotazione;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class PrenotazioneController {
 
-    private CalendarioController calendarioController;
-    private NotificaController notificaController;
+    private final CalendarioController calendarioController;
+    private final NotificaController notificaController;
+    private final GestorePersistenza gestorePersistenza;
 
-    public PrenotazioneController(CalendarioController calendarioController, NotificaController notificaController){
+    public PrenotazioneController(CalendarioController calendarioController, NotificaController notificaController,
+                                  GestorePersistenza gestorePersistenza){
 
         this.calendarioController = calendarioController;
         this.notificaController = notificaController;
+        this.gestorePersistenza = gestorePersistenza;
     }
 
-    public boolean setStatoPrenotazione(Long idPrenotazione, com.ambulatorio.entity.enums.StatoPrenotazione nuovoStato) {
+    public boolean setStatoPrenotazione(Long idPrenotazione, StatoPrenotazione nuovoStato) {
         try {
-            com.ambulatorio.database.GestorePersistenza gestore = new com.ambulatorio.database.GestorePersistenza();
-            com.ambulatorio.entity.Prenotazione prenotazione = gestore.trovaPerId(com.ambulatorio.entity.Prenotazione.class, idPrenotazione);
+
+            Prenotazione prenotazione = gestorePersistenza.trovaPerId(Prenotazione.class, idPrenotazione);
 
             if (prenotazione != null) {
                 prenotazione.setStato(nuovoStato);
-                gestore.aggiorna(prenotazione);
+                gestorePersistenza.aggiorna(prenotazione);
 
                 // Se la prenotazione viene annullata, la fascia oraria torna libera
                 if (nuovoStato == com.ambulatorio.entity.enums.StatoPrenotazione.ANNULLATA) {
                     com.ambulatorio.entity.FasciaOraria fascia = prenotazione.getFasciaOraria();
                     if (fascia != null) {
                         fascia.setStato(com.ambulatorio.entity.enums.StatoFascia.LIBERA);
-                        gestore.aggiorna(fascia);
+                        gestorePersistenza.aggiorna(fascia);
                     }
                 }
                 return true;
@@ -174,5 +180,21 @@ public class PrenotazioneController {
                 "paziente.id",
                 idPaziente
         );
+    }
+
+    public StatisticheDto calcolaReportStatistiche(LocalDate dataInizio, LocalDate dataFine){
+
+        StatisticheDto statisticheDto;
+        List<Prenotazione> listaPrenotazioni = gestorePersistenza.cercaPerCampi();
+        List<FasciaOraria> listaFasciaOraria = gestorePersistenza.cercaPerCampi();
+
+        if(listaPrenotazioni.isEmpty() || listaFasciaOraria.isEmpty()){
+
+            return statisticheDto = new StatisticheDto(Instant.now(), dataInizio, dataFine, Collections.emptyMap(),
+                    Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(),
+                    0, 0, 0);
+        }
+
+        return statisticheDto ;
     }
 }

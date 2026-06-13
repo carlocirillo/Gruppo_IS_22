@@ -19,6 +19,7 @@ public class Prenotazione {
     private Long id;
 
     private LocalDate dataCreazione;
+    private LocalDate dataPrenotazione;
 
     @Enumerated(EnumType.STRING)
     private StatoPrenotazione stato;
