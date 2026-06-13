@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter;
 
 public class AreaAmministratoreView {
 
-    private JPanel GUIPanel;
+    public JPanel contentPane;
     private JLabel lblTitolo;
     private JLabel lblFiltri;
     private JPanel filtriPanel;
@@ -35,6 +35,7 @@ public class AreaAmministratoreView {
     private JScrollPane scrollPane;
 
     private void createUIComponents() {
+        tblMetriche = new JTable();
 
         String[] attributi = {"Specializzazione Medica", "Numero Prenotazioni"};
 
@@ -66,7 +67,7 @@ public class AreaAmministratoreView {
         if(erroreInizio != null){
 
             // In caso di errore mostra un messaggio personalizzato e blocca l'esecuzione
-            JOptionPane.showMessageDialog(GUIPanel, "Errore nella data d'inizio: " + erroreInizio,
+            JOptionPane.showMessageDialog(contentPane, "Errore nella data d'inizio: " + erroreInizio,
                     "ERRORE", JOptionPane.ERROR_MESSAGE);
 
             return;
@@ -75,7 +76,7 @@ public class AreaAmministratoreView {
         String erroreFine = isDataValida(testoFine);
         if(erroreFine != null){
 
-            JOptionPane.showMessageDialog(GUIPanel, "Errore nella data di fine: " + erroreFine,
+            JOptionPane.showMessageDialog(contentPane, "Errore nella data di fine: " + erroreFine,
                     "ERRORE", JOptionPane.ERROR_MESSAGE);
 
             return;
@@ -89,7 +90,7 @@ public class AreaAmministratoreView {
         // Verifica che dataInizio sia antecedente a dataFine
         if(dataInizio.isAfter(dataFine)){
 
-            JOptionPane.showMessageDialog(GUIPanel, "La data d’inizio deve essere antecedente a quella di fine.",
+            JOptionPane.showMessageDialog(contentPane, "La data d’inizio deve essere antecedente a quella di fine.",
                     "ERRORE", JOptionPane.ERROR_MESSAGE);
 
             return;
@@ -98,7 +99,7 @@ public class AreaAmministratoreView {
         // Verifica che dataFine non sia antecedente a dataCreazioneAmbulatorio
         if(dataFine.isBefore(dataCreazioneAmbulatorio)){
 
-            JOptionPane.showMessageDialog(GUIPanel,
+            JOptionPane.showMessageDialog(contentPane,
                     "Impossibile consultare le statistiche dell’ambulatorio antecedenti alla sua creazione.",
                     "ERRORE", JOptionPane.ERROR_MESSAGE);
 
@@ -116,8 +117,8 @@ public class AreaAmministratoreView {
         elaborazionePanel.setVisible(true);
 
         // Aggiorna la grafica del panel principale
-        GUIPanel.revalidate();
-        GUIPanel.repaint();
+        contentPane.revalidate();
+        contentPane.repaint();
 
 
     }

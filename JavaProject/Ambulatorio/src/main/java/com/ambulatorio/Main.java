@@ -1,5 +1,6 @@
 package com.ambulatorio;
 
+import com.ambulatorio.boundary.AreaAmministratoreView;
 import com.ambulatorio.boundary.MainPage;
 import com.ambulatorio.database.GestorePersistenza;
 import com.ambulatorio.database.JpaUtil;
@@ -7,10 +8,10 @@ import com.ambulatorio.database.JpaUtil;
 import javax.swing.*;
 
 public class Main {
-    static void main() {
+    public static void main() {
         JFrame frame = new JFrame();
         frame.setTitle("Ambulatorio");
-        frame.setContentPane(new MainPage().contentPane);
+        frame.setContentPane(new AreaAmministratoreView().contentPane);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
