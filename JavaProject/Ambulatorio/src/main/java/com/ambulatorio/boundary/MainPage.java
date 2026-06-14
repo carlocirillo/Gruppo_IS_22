@@ -1,5 +1,7 @@
 package com.ambulatorio.boundary;
 
+import com.ambulatorio.utils.Navigatore;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,36 +11,18 @@ public class MainPage {
     private JButton registratiButton;
     public JPanel contentPane;
 
-    public MainPage() {
+    public MainPage(Navigatore navigatore) {
         accediButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                apriSchermataLogin();
+                navigatore.apriLogin();
             }
         });
         registratiButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                apriSchermataRegistrazione();
+                navigatore.apriRegistrazione();
             }
         });
-    }
-
-    private void apriSchermataLogin() {
-        JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(contentPane);
-        LoginView loginView = new LoginView();
-        frame.setContentPane(loginView.contentPane);
-
-        frame.revalidate();
-        frame.repaint();
-    }
-
-    private void apriSchermataRegistrazione() {
-        JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(contentPane);
-        RegistrazioneView registrazioneView = new RegistrazioneView();
-        frame.setContentPane(registrazioneView.contentPane);
-
-        frame.revalidate();
-        frame.repaint();
     }
 }

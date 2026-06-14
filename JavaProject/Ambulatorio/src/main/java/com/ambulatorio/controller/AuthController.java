@@ -46,18 +46,23 @@ public class AuthController {
         }
     }
 
-    public String login(CredenzialiAccessoDto dati) { // Restituisco String o un Dto contenente il token
+    public String login(CredenzialiAccessoDto dati) {
 
         if (dati == null || dati.email() == null || dati.password() == null) {
-            throw new IllegalArgumentException("Email e password sono obbligatori");
+            throw new IllegalArgumentException("Email e password sono obbligatorie");
         }
 
         List<Utente> utenti = gestorePersistenza.cercaPerCampo(Utente.class,"email", dati.email());
 
-        String passwordHash = utenti.getFirst().getPasswordHash();
-        if (utenti.isEmpty() || !PasswordUtils.verifica(dati.password(), passwordHash)) {
-            throw new CredenzialiNonValideException("Email o password non validi.");
+        if (utenti.isEmpty()) {
+            throw new CredenzialiNonValideException("Email o password non valida.");
         }
+
+        String passwordHash = utenti.getFirst().getPasswordHash();
+        if (!PasswordUtils.verifica(dati.password(), passwordHash)) {
+            throw new CredenzialiNonValideException("Email o password non valida.");
+        }
+
 
         Utente utenteAutenticato = utenti.getFirst();
 

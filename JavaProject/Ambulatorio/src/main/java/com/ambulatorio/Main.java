@@ -7,6 +7,7 @@ import com.ambulatorio.controller.MedicoController;
 import com.ambulatorio.controller.PrenotazioneController;
 import com.ambulatorio.database.GestorePersistenza;
 import com.ambulatorio.utils.InizializzatoreDatabase;
+import com.ambulatorio.utils.Navigatore;
 
 import javax.swing.*;
 
@@ -23,10 +24,18 @@ public class Main {
             e.printStackTrace();
         }
 
-        // 2. --- INIZIALIZZAZIONE INTERFACCIA GRAFICA ---
+        // 2. --- CREAZIONE CONTROLLER ---
+        AuthController authController = new AuthController(gestore);
+        MedicoController medicoController = new MedicoController(gestore);
+        PrenotazioneController prenotazioneController = new PrenotazioneController(gestore);
+        CalendarioController calendarioController = new CalendarioController(gestore);
+
+        // 3. --- INIZIALIZZAZIONE NAVIGATORE E INTERFACCIA GRAFICA ---
         JFrame frame = new JFrame();
+        Navigatore navigatore = new Navigatore(frame, authController, calendarioController, medicoController, prenotazioneController);
+
         frame.setTitle("Ambulatorio");
-        frame.setContentPane(new MainPage().contentPane);
+        frame.setContentPane(new MainPage(navigatore).contentPane);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);
@@ -35,11 +44,5 @@ public class Main {
 
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-
-        // 3. --- CREAZIONE CONTROLLER ---
-        AuthController authController = new AuthController(gestore);
-        MedicoController medicoController = new MedicoController(gestore);
-        PrenotazioneController prenotazioneController = new PrenotazioneController(gestore);
-        CalendarioController calendarioController = new CalendarioController(gestore);
     }
 }

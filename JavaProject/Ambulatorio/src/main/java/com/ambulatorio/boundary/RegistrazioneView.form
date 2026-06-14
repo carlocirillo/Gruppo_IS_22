@@ -12,12 +12,12 @@
     <children>
       <component id="fadbc" class="javax.swing.JLabel">
         <constraints>
-          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
           <font size="32" style="1"/>
           <foreground color="-16777216"/>
-          <text value="Registrazione Paziente"/>
+          <text value="Registrazione "/>
         </properties>
       </component>
       <hspacer id="9019d">
@@ -75,6 +75,7 @@
                     <preferred-size width="150" height="35"/>
                   </grid>
                 </constraints>
+                <properties/>
               </component>
             </children>
           </grid>
@@ -103,6 +104,7 @@
                     <preferred-size width="150" height="35"/>
                   </grid>
                 </constraints>
+                <properties/>
               </component>
             </children>
           </grid>
@@ -131,6 +133,7 @@
                     <preferred-size width="150" height="35"/>
                   </grid>
                 </constraints>
+                <properties/>
               </component>
             </children>
           </grid>
@@ -159,6 +162,7 @@
                     <preferred-size width="150" height="35"/>
                   </grid>
                 </constraints>
+                <properties/>
               </component>
             </children>
           </grid>
@@ -187,6 +191,7 @@
                     <preferred-size width="150" height="35"/>
                   </grid>
                 </constraints>
+                <properties/>
               </component>
             </children>
           </grid>
@@ -215,6 +220,7 @@
                     <preferred-size width="150" height="35"/>
                   </grid>
                 </constraints>
+                <properties/>
               </component>
             </children>
           </grid>
