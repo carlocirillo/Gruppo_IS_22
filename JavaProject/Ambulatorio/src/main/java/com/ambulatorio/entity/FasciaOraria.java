@@ -8,13 +8,18 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @NoArgsConstructor
 @Getter
 @Setter
 public class FasciaOraria {
-
+    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+    @Override
+    public String toString() {
+        return oraInizio.format(formatter) + " - " + oraFine.format(formatter);
+    }
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -101,7 +101,7 @@ public class AreaMedicoView {
 
         for (Prenotazione p : prenotazioniVisualizzate) {
             Object[] row = {
-                    p.getFasciaOraria().getOraInizio().toString(),
+                    p.getFasciaOraria().toString(),
                     p.getPaziente().getNome() + " " + p.getPaziente().getCognome(),
                     p.getStato()
             };
