@@ -161,13 +161,13 @@ public class AreaAmministratoreView {
         model.setRowCount(0);
 
         // Itera sulle chiavi della map
-        for(String nomeSpecializzazione : report.prenotazioniTotaliPerSpec().keySet()){
+        for(long idSpecializzazione : report.prenotazioniTotaliPerSpec().keySet()){
 
             // Tramite le chiave ottengo il valore associato (Il numero di Prenotazioni)
-            Integer numeroPrenotazioni = report.prenotazioniTotaliPerSpec().get(nomeSpecializzazione);
+            int numeroPrenotazioni = report.prenotazioniTotaliPerSpec().get(idSpecializzazione);
 
             // Costruisce un oggetto riga da aggiungerw alla tabella
-            Object[] riga = new Object[]{nomeSpecializzazione, numeroPrenotazioni};
+            Object[] riga = new Object[]{idSpecializzazione, numeroPrenotazioni};
             model.addRow(riga);
         }
 

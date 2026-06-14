@@ -1,4 +1,4 @@
-package com.ambulatorio.dto.response;
+package com.ambulatorio.DTO.response;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -13,6 +13,5 @@ public record StatisticheDto(
         Map<LocalDate, Integer> prenotazioniTotaliPerGiorno,
         Map<String, Integer> prenotazioniPerStato,
         int pazientiUniciPrenotazioni,
-        float mediaPrenotazioniPaziente,
-        float anticipoMedioGiorniPrenotazione
+        float mediaPrenotazioniPaziente
         ){}

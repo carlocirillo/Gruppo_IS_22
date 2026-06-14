@@ -34,4 +34,16 @@ public class LoginView {
         frame.revalidate();
         frame.repaint();
     }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Test Login");
+            LoginView loginView = new LoginView();
+            frame.setContentPane(loginView.contentPane);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.pack();
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+        });
+    }
 }

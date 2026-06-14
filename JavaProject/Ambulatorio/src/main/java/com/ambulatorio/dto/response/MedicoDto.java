@@ -1,4 +1,4 @@
-package com.ambulatorio.dto.response;
+package com.ambulatorio.DTO.response;
 
 public record MedicoDto(
         Long id,

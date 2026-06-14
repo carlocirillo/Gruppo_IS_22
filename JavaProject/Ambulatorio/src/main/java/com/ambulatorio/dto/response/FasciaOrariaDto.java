@@ -1,4 +1,4 @@
-package com.ambulatorio.dto.response;
+package com.ambulatorio.DTO.response;
 
 import com.ambulatorio.entity.enums.StatoFascia;
 

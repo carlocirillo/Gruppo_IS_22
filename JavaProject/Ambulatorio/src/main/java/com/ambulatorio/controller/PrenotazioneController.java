@@ -1,8 +1,8 @@
 package com.ambulatorio.controller;
 
 import com.ambulatorio.database.GestorePersistenza;
-import com.ambulatorio.dto.response.*;
-import com.ambulatorio.dto.response.StatisticheDto;
+import com.ambulatorio.DTO.response.*;
+import com.ambulatorio.DTO.response.StatisticheDto;
 import com.ambulatorio.entity.*;
 import com.ambulatorio.entity.enums.StatoPrenotazione;
 import com.ambulatorio.entity.enums.StatoFascia;
@@ -204,7 +204,7 @@ public class PrenotazioneController {
                 parametri
         );
 
-        StatisticheDto statisticheDto = new StatisticheDto(
+        StatisticheDto reportVuoto = new StatisticheDto(
                 Instant.now(),
                 dataInizio,
                 dataFine,
@@ -213,15 +213,43 @@ public class PrenotazioneController {
                 Collections.emptyMap(),
                 Collections.emptyMap(),
                 0,
-                0,
-                0);
+                0
+        );
 
-        /* COSTRUISCI LE STATISTICHE
-        *
-        *
-        *
-         */
+        if(!listaPrenotazioni.isEmpty()){
 
-        return statisticheDto;
+            Map<Long, Integer> perMedico = new HashMap<>();
+            Map<Long, Integer> perSpec = new HashMap<>();
+            Map<LocalDate, Integer> perGiorno = new HashMap<>();
+            Map<String, Integer> perStato = new HashMap<>();
+
+            Set<Long> pazientiUnici = new HashSet<>();
+
+            for(Prenotazione p : listaPrenotazioni){
+
+                StatoPrenotazione stato = p.getStato();
+                perStato.put(stato.toString(), perStato.getOrDefault(stato.toString(), 0) + 1);
+
+                LocalDate giorno = p.getDataPrenotazione();
+                perGiorno.put(giorno, perGiorno.getOrDefault(giorno, 0) + 1);
+
+                FasciaOraria f = p.getFasciaOraria();
+                Medico m = f.getMedico();
+                perMedico.put(m.getId(), perMedico.getOrDefault(m.getId(), 0)+ 1);
+
+                Specializzazione s = m.getSpecializzazione();
+                perSpec.put(s.getId(), perSpec.getOrDefault(s.getId(), 0) + 1);
+
+                pazientiUnici.add(p.getPaziente().getId());
+            }
+
+            int countPazientiUnici = pazientiUnici.size();
+            float mediaPazienti = (float) listaPrenotazioni.size() / countPazientiUnici;
+
+            return new StatisticheDto(Instant.now(), dataInizio, dataFine, perMedico,
+                    perSpec, perGiorno, perStato, countPazientiUnici, mediaPazienti);
+        }
+
+        return reportVuoto;
     }
 }

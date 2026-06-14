@@ -1,8 +1,8 @@
 package com.ambulatorio.controller;
 
 import com.ambulatorio.database.GestorePersistenza;
-import com.ambulatorio.dto.response.MedicoDto;
-import com.ambulatorio.dto.response.SpecializzazioneDto;
+import com.ambulatorio.DTO.response.MedicoDto;
+import com.ambulatorio.DTO.response.SpecializzazioneDto;
 import com.ambulatorio.entity.Medico;
 import com.ambulatorio.entity.Specializzazione;
 
