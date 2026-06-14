@@ -76,7 +76,7 @@
                 </constraints>
                 <properties>
                   <font name="Segoe UI"/>
-                  <text value="Data inizio:"/>
+                  <text value="&lt;html&gt;Data inizio &lt;font color='gray'&gt;(GG/MM/AAAA)&lt;/font&gt;:&lt;/html&gt;"/>
                 </properties>
               </component>
               <component id="a889c" class="javax.swing.JTextField" binding="dataInizioTxt">
@@ -86,7 +86,8 @@
                   </grid>
                 </constraints>
                 <properties>
-                  <text value="GG/MM/AAAA"/>
+                  <text value=""/>
+                  <tool-tip-text value="Inserisci la data nel formato GG/MM/AAAA"/>
                 </properties>
               </component>
               <component id="bcf27" class="javax.swing.JLabel" binding="lblDataFine">
@@ -95,7 +96,7 @@
                 </constraints>
                 <properties>
                   <font name="Segoe UI"/>
-                  <text value="Data fine:"/>
+                  <text value="&lt;html&gt;Data fine &lt;font color='gray'&gt;(GG/MM/AAAA)&lt;/font&gt;:&lt;/html&gt;"/>
                 </properties>
               </component>
               <component id="43ecd" class="javax.swing.JTextField" binding="dataFineTxt">
@@ -105,7 +106,8 @@
                   </grid>
                 </constraints>
                 <properties>
-                  <text value="GG/MM/AAAA"/>
+                  <text value=""/>
+                  <tool-tip-text value="Inserisci la data nel formato GG/MM/AAAA"/>
                 </properties>
               </component>
               <component id="71ce6" class="javax.swing.JButton" binding="btnElabora">
@@ -118,7 +120,7 @@
                   <background color="-12211457"/>
                   <font name="Segoe UI" style="1"/>
                   <foreground color="-16777216"/>
-                  <text value="Aggiorna Dashboard"/>
+                  <text value="Genera Report"/>
                 </properties>
               </component>
             </children>

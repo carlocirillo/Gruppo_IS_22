@@ -52,7 +52,7 @@ public class Navigatore {
 
     public void apriAreaMedico() {
         Long idMedico = SessioneUtente.getInstance().getIdUtente();
-        AreaMedicoView view = new AreaMedicoView(prenotazioneController, idMedico);
+        AreaMedicoView view = new AreaMedicoView(this, prenotazioneController, idMedico);
         cambiaSchermata(view.contentPane);
     }
 

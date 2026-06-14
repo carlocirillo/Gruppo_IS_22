@@ -3,6 +3,7 @@ package com.ambulatorio.boundary;
 import com.ambulatorio.controller.PrenotazioneController;
 import com.ambulatorio.dto.response.PrenotazioneDto;
 import com.ambulatorio.entity.enums.StatoPrenotazione;
+import com.ambulatorio.utils.Navigatore;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -26,12 +27,14 @@ public class AreaMedicoView {
     private JButton btnIndietro;
     private JLabel lblDataSelezionata;
 
+    private final Navigatore navigatore;
     private final PrenotazioneController prenotazioneController;
     private List<PrenotazioneDto> prenotazioniVisualizzate;
     private LocalDate dataVisualizzata;
     private long idMedicoCorrente;
 
-    public AreaMedicoView(PrenotazioneController prenotazioneController, long idMedico) {
+    public AreaMedicoView(Navigatore navigatore, PrenotazioneController prenotazioneController, long idMedico) {
+        this.navigatore = navigatore;
         this.idMedicoCorrente = idMedico;
         this.prenotazioneController = prenotazioneController;
         this.prenotazioniVisualizzate = new ArrayList<>();
@@ -63,6 +66,8 @@ public class AreaMedicoView {
     }
 
     private void initNavigation() {
+        btnIndietro.addActionListener(e -> navigatore.apriMainPage());
+
         btnGiornoPrecedente.addActionListener(e -> {
             LocalDate nuovaData = dataVisualizzata.minusDays(1);
             Date date = Date.from(nuovaData.atStartOfDay(ZoneId.systemDefault()).toInstant());
