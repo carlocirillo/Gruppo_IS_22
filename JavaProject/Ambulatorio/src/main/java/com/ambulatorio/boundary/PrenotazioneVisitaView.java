@@ -26,12 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Boundary del caso d'uso PrenotaVisita.
- *
- * La view riceve i controller dal Main e non crea né controller né GestorePersistenza.
- * Lavora direttamente sui DTO restituiti dai controller, senza classi Item intermedie.
- */
+
 public class PrenotazioneVisitaView extends JFrame {
 
     public JPanel contentPane;
