@@ -1,8 +1,12 @@
 package com.ambulatorio;
 
 import com.ambulatorio.database.GestorePersistenza;
-import com.ambulatorio.entity.Medico;
-import com.ambulatorio.entity.Specializzazione;
+import com.ambulatorio.entity.*;
+import com.ambulatorio.entity.enums.StatoFascia;
+import com.ambulatorio.entity.enums.StatoPrenotazione;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 public class InizializzatoreDatabase {
 
@@ -19,39 +23,104 @@ public class InizializzatoreDatabase {
 
         if (numeroMedici > 0) {
             System.out.println("Dati di test già presenti nel database");
-            return;
+
         }
+        else {
 
-        System.out.println("--- Popolamento dati fittizi ---");
 
-        // 2. Creazione Dati
-        Specializzazione cardiologia = new Specializzazione();
-        cardiologia.setNome("Cardiologia");
+            System.out.println("--- Popolamento dati fittizi ---");
 
-        Specializzazione chirurgia = new Specializzazione();
-        chirurgia.setNome("Chirurgia");
+            // 2. Creazione Specializzazioni
+            Specializzazione cardiologia = new Specializzazione();
+            cardiologia.setNome("Cardiologia");
+            gestore.salva(cardiologia);
 
-        Medico medico1 = new Medico();
-        medico1.setNome("Mario");
-        medico1.setCognome("Rossi");
-        medico1.setEmail("mario.rossi@email.com");
-        medico1.setPasswordHash("hashMario");
-        medico1.setNumeroCellulare("3331234567");
-        medico1.setSpecializzazione(cardiologia);
+            Specializzazione chirurgia = new Specializzazione();
+            chirurgia.setNome("Chirurgia");
+            gestore.salva(chirurgia);
 
-        Medico medico2 = new Medico();
-        medico2.setNome("Luigi");
-        medico2.setCognome("Bianchi");
-        medico2.setEmail("luigi.bianchi@email.com");
-        medico2.setPasswordHash("hashLuigi");
-        medico2.setNumeroCellulare("3331234568");
-        medico2.setSpecializzazione(chirurgia);
+            // 3. Creazione Medici
+            Medico medico1 = new Medico();
+            medico1.setNome("Mario");
+            medico1.setCognome("Rossi");
+            medico1.setEmail("mario.rossi@email.com");
+            medico1.setPasswordHash("hashMario");
+            medico1.setNumeroCellulare("3331234567");
+            medico1.setSpecializzazione(cardiologia);
+            gestore.salva(medico1);
 
-        // 3. Salvataggio
-        gestore.salva(cardiologia);
-        gestore.salva(medico1);
-        gestore.salva(chirurgia);
-        gestore.salva(medico2);
+            Medico medico2 = new Medico();
+            medico2.setNome("Luigi");
+            medico2.setCognome("Bianchi");
+            medico2.setEmail("luigi.bianchi@email.com");
+            medico2.setPasswordHash("hashLuigi");
+            medico2.setNumeroCellulare("3331234568");
+            medico2.setSpecializzazione(chirurgia);
+            gestore.salva(medico2);
+        }
+        long numeroPrenotazioni = gestore.conta(Prenotazione.class);
+        if (numeroPrenotazioni == 0){
+
+        // 4. Creazione Pazienti
+        Paziente paziente1 = new Paziente();
+        paziente1.setNome("Anna");
+        paziente1.setCognome("Verdi");
+        paziente1.setEmail("anna.verdi@email.com");
+        paziente1.setCodiceFiscale("VRDNNA90A01H501Z");
+        gestore.salva(paziente1);
+
+        Paziente paziente2 = new Paziente();
+        paziente2.setNome("Giuseppe");
+        paziente2.setCognome("Neri");
+        paziente2.setEmail("giuseppe.neri@email.com");
+        paziente2.setCodiceFiscale("NREGRP85B02L219X");
+        gestore.salva(paziente2);
+
+        // 5. Creazione Fasce Orarie e Prenotazioni
+        
+        // Fascia passata per Medico 1 (Mario Rossi) - Oggi, 2 ore fa
+        FasciaOraria f1 = new FasciaOraria();
+        Medico medico1 = gestore.cercaPerCampo(Medico.class, "email", "mario.rossi@email.com").getFirst();
+        f1.setMedico(medico1);
+        f1.setData(LocalDate.now());
+        f1.setOraInizio(LocalTime.now().minusHours(2).withMinute(0).withSecond(0));
+        f1.setOraFine(f1.getOraInizio().plusMinutes(30));
+        f1.setStato(StatoFascia.OCCUPATA);
+        gestore.salva(f1);
+
+        Prenotazione pren1 = new Prenotazione();
+        pren1.setPaziente(paziente1);
+        pren1.setFasciaOraria(f1);
+        pren1.setDataCreazione(LocalDate.now().minusDays(1));
+        pren1.setStato(StatoPrenotazione.PRENOTATA);
+        gestore.salva(pren1);
+
+        // Fascia futura per Medico 1 (Mario Rossi) - Domani, ore 10:00
+        FasciaOraria f2 = new FasciaOraria();
+        f2.setMedico(medico1);
+        f2.setData(LocalDate.now().plusDays(1));
+        f2.setOraInizio(LocalTime.of(10, 0));
+        f2.setOraFine(LocalTime.of(10, 30));
+        f2.setStato(StatoFascia.OCCUPATA);
+        gestore.salva(f2);
+
+        Prenotazione pren2 = new Prenotazione();
+        pren2.setPaziente(paziente2);
+        pren2.setFasciaOraria(f2);
+        pren2.setDataCreazione(LocalDate.now().minusDays(2));
+        pren2.setStato(StatoPrenotazione.PRENOTATA);
+        gestore.salva(pren2);
+
+        // Fascia libera per Medico 2 (Luigi Bianchi) - Oggi, tra 1 ora
+        FasciaOraria f3 = new FasciaOraria();
+        Medico medico2 = gestore.cercaPerCampo(Medico.class, "email", "luigi.bianchi@email.com").getFirst();
+        f3.setMedico(medico2);
+        f3.setData(LocalDate.now());
+        f3.setOraInizio(LocalTime.now().plusHours(1).withMinute(0).withSecond(0));
+        f3.setOraFine(f3.getOraInizio().plusMinutes(30));
+        f3.setStato(StatoFascia.LIBERA);
+        gestore.salva(f3);
+        }
 
         System.out.println("--- Dati fittizi inseriti con successo! ---");
     }

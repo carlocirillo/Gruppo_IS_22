@@ -16,15 +16,22 @@ import java.util.Map;
  * prima la specializzazione e poi il medico desiderato.
  */
 public class MedicoController {
-
+    private static MedicoController instance;
     private final GestorePersistenza gestorePersistenza;
 
-    public MedicoController() {
+    private MedicoController() {
         this(new GestorePersistenza());
     }
 
-    public MedicoController(GestorePersistenza gestorePersistenza) {
+    private MedicoController(GestorePersistenza gestorePersistenza) {
         this.gestorePersistenza = gestorePersistenza;
+    }
+
+    public static MedicoController getInstance() {
+        if (instance == null) {
+            instance = new MedicoController();
+        }
+        return instance;
     }
 
     public List<SpecializzazioneInfo> getAllSpecializzazioni() {
