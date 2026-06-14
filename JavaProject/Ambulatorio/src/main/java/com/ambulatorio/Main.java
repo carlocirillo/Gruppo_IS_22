@@ -2,6 +2,7 @@ package com.ambulatorio;
 
 import com.ambulatorio.boundary.MainPage;
 import com.ambulatorio.controller.AuthController;
+import com.ambulatorio.controller.CalendarioController;
 import com.ambulatorio.controller.MedicoController;
 import com.ambulatorio.controller.PrenotazioneController;
 import com.ambulatorio.database.GestorePersistenza;
@@ -39,6 +40,6 @@ public class Main {
         AuthController authController = new AuthController(gestore);
         MedicoController medicoController = new MedicoController(gestore);
         PrenotazioneController prenotazioneController = new PrenotazioneController(gestore);
-
+        CalendarioController calendarioController = new CalendarioController(gestore);
     }
 }

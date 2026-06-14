@@ -1,6 +1,6 @@
 package com.ambulatorio.boundary;
 
-import com.ambulatorio.DTO.response.StatisticheDto;
+import com.ambulatorio.dto.response.StatisticheDto;
 import com.ambulatorio.controller.PrenotazioneController;
 import com.ambulatorio.entity.enums.StatoPrenotazione;
 

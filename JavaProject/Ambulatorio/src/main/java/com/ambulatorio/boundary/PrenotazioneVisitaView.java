@@ -1,10 +1,11 @@
 package com.ambulatorio.boundary;
 
+import com.ambulatorio.controller.CalendarioController;
 import com.ambulatorio.controller.MedicoController;
 import com.ambulatorio.controller.PrenotazioneController;
-import com.ambulatorio.database.GestorePersistenza;
-import com.ambulatorio.entity.FasciaOraria;
-import com.ambulatorio.entity.Medico;
+import com.ambulatorio.dto.response.FasciaOrariaDto;
+import com.ambulatorio.dto.response.MedicoDto;
+import com.ambulatorio.dto.response.SpecializzazioneDto;
 import com.ambulatorio.entity.enums.StatoFascia;
 
 import javax.swing.DefaultComboBoxModel;
@@ -19,17 +20,11 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.Comparator;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 
-/**
- * Boundary del caso d'uso PrenotaVisita.
- *
- * Questa classe è collegata al file PrenotazioneVisitaView.form creato con
- * IntelliJ Swing UI Designer. Nel file .java viene gestita solo la logica
- * degli eventi e il collegamento con i controller.
- */
+
 public class PrenotazioneVisitaView extends JFrame {
 
     public JPanel contentPane;
@@ -38,33 +33,33 @@ public class PrenotazioneVisitaView extends JFrame {
     private JLabel lblMedico;
     private JLabel lblFasce;
     private JLabel lblRiepilogo;
-    private JComboBox cmbSpecializzazioni;
-    private JComboBox cmbMedici;
-    private JList listaFasce;
+    private JComboBox<SpecializzazioneItem> cmbSpecializzazioni;
+    private JComboBox<MedicoItem> cmbMedici;
+    private JList<FasciaOrariaItem> listaFasce;
     private JTextArea txtRiepilogo;
     private JButton btnAggiornaFasce;
     private JButton btnConferma;
 
+    private static final int MESI_DA_VISUALIZZARE = 3;
+    private static final DateTimeFormatter DATA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
     private DefaultListModel<FasciaOrariaItem> modelloFasce;
 
-    private final Long idPazienteAutenticato;
     private final MedicoController medicoController;
+    private final CalendarioController calendarioController;
     private final PrenotazioneController prenotazioneController;
-    private final GestorePersistenza gestorePersistenza;
+    private final Long idPazienteAutenticato;
 
-    /**
-     * Costruttore provvisorio utile finché il login non passa ancora il paziente autenticato.
-     * Nel flusso definitivo va usato PrenotazioneVisitaView(Long idPazienteAutenticato).
-     */
-    public PrenotazioneVisitaView() {
-        this(1L);
-    }
-
-    public PrenotazioneVisitaView(Long idPazienteAutenticato) {
+    public PrenotazioneVisitaView(
+            MedicoController medicoController,
+            CalendarioController calendarioController,
+            PrenotazioneController prenotazioneController,
+            Long idPazienteAutenticato
+    ) {
+        this.medicoController = Objects.requireNonNull(medicoController, "Il MedicoController non può essere null");
+        this.calendarioController = Objects.requireNonNull(calendarioController, "Il CalendarioController non può essere null");
+        this.prenotazioneController = Objects.requireNonNull(prenotazioneController, "Il PrenotazioneController non può essere null");
         this.idPazienteAutenticato = idPazienteAutenticato;
-        this.medicoController = MedicoController.getInstance();
-        this.prenotazioneController = PrenotazioneController.getInstance();
-        this.gestorePersistenza = new GestorePersistenza();
 
         inizializzaFrame();
         inizializzaComponenti();
@@ -88,6 +83,7 @@ public class PrenotazioneVisitaView extends JFrame {
         txtRiepilogo.setEditable(false);
         txtRiepilogo.setLineWrap(true);
         txtRiepilogo.setWrapStyleWord(true);
+        txtRiepilogo.setText("Seleziona una specializzazione, un medico e una fascia oraria disponibile.");
 
         cmbMedici.setEnabled(false);
         btnAggiornaFasce.setEnabled(false);
@@ -95,139 +91,97 @@ public class PrenotazioneVisitaView extends JFrame {
     }
 
     private void collegaEventi() {
-        cmbSpecializzazioni.addActionListener(e -> caricaMedici());
-        cmbMedici.addActionListener(e -> caricaFasceDisponibili());
-        btnAggiornaFasce.addActionListener(e -> caricaFasceDisponibili());
+        cmbSpecializzazioni.addActionListener(e -> caricaMediciPerSpecializzazione());
+        cmbMedici.addActionListener(e -> caricaFasceDisponibiliPerMedico());
+        btnAggiornaFasce.addActionListener(e -> caricaFasceDisponibiliPerMedico());
         btnConferma.addActionListener(e -> confermaPrenotazione());
-    }
 
-    public void mostraSpecializzazioni(List<MedicoController.SpecializzazioneInfo> specializzazioni) {
-        cmbSpecializzazioni.setModel(new DefaultComboBoxModel<>(
-                specializzazioni.toArray(new MedicoController.SpecializzazioneInfo[0])
-        ));
-    }
-
-    public MedicoController.SpecializzazioneInfo leggiSpecializzazioneSelezionata() {
-        return (MedicoController.SpecializzazioneInfo) cmbSpecializzazioni.getSelectedItem();
-    }
-
-    public void mostraMedici(List<MedicoController.MedicoInfo> medici) {
-        cmbMedici.setModel(new DefaultComboBoxModel<>(
-                medici.toArray(new MedicoController.MedicoInfo[0])
-        ));
-    }
-
-    public MedicoController.MedicoInfo leggiMedicoSelezionato() {
-        return (MedicoController.MedicoInfo) cmbMedici.getSelectedItem();
-    }
-
-    public void mostraFasceOrarie(List<FasciaOrariaItem> fasce) {
-        modelloFasce.clear();
-
-        for (FasciaOrariaItem fascia : fasce) {
-            modelloFasce.addElement(fascia);
-        }
-
-        btnConferma.setEnabled(!fasce.isEmpty());
-    }
-
-    public FasciaOrariaItem leggiFasciaSelezionata() {
-        return (FasciaOrariaItem) listaFasce.getSelectedValue();
-    }
-
-    public void mostraMessaggio(String messaggio) {
-        JOptionPane.showMessageDialog(this, messaggio);
+        listaFasce.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                aggiornaRiepilogoSelezione();
+            }
+        });
     }
 
     private void caricaSpecializzazioni() {
-        List<MedicoController.SpecializzazioneInfo> specializzazioni = medicoController.getAllSpecializzazioni();
-        mostraSpecializzazioni(specializzazioni);
+        try {
+            List<SpecializzazioneDto> specializzazioni = medicoController.getAllSpecializzazioni();
+            mostraSpecializzazioni(specializzazioni);
 
-        if (specializzazioni.isEmpty()) {
-            mostraMessaggio("Non sono presenti specializzazioni configurate nel sistema.");
+            boolean presenti = !specializzazioni.isEmpty();
+            cmbSpecializzazioni.setEnabled(presenti);
             cmbMedici.setEnabled(false);
             btnAggiornaFasce.setEnabled(false);
-        } else {
-            cmbMedici.setEnabled(true);
-            btnAggiornaFasce.setEnabled(true);
+            btnConferma.setEnabled(false);
+
+            if (!presenti) {
+                txtRiepilogo.setText("Non sono presenti specializzazioni configurate nel sistema.");
+                mostraMessaggio("Non sono presenti specializzazioni configurate nel sistema.");
+            }
+        } catch (RuntimeException ex) {
+            mostraErrore("Errore durante il caricamento delle specializzazioni", ex);
         }
     }
 
-    private void caricaMedici() {
-        MedicoController.SpecializzazioneInfo specializzazione = leggiSpecializzazioneSelezionata();
+    private void caricaMediciPerSpecializzazione() {
+        SpecializzazioneItem specializzazioneSelezionata = leggiSpecializzazioneSelezionata();
 
-        if (specializzazione == null) {
-            mostraMedici(List.of());
-            mostraFasceOrarie(List.of());
+        pulisciMedici();
+        pulisciFasce();
+
+        if (specializzazioneSelezionata == null) {
             return;
         }
 
-        List<MedicoController.MedicoInfo> medici = medicoController.getMediciBySpecializzazione(
-                specializzazione.getId()
-        );
+        try {
+            List<MedicoDto> medici = medicoController.getMediciBySpecializzazione(
+                    specializzazioneSelezionata.getDto().id()
+            );
 
-        mostraMedici(medici);
-        mostraFasceOrarie(List.of());
-        txtRiepilogo.setText("");
+            mostraMedici(medici);
+            cmbMedici.setEnabled(!medici.isEmpty());
+            btnAggiornaFasce.setEnabled(!medici.isEmpty());
 
-        if (medici.isEmpty()) {
-            mostraMessaggio("Non sono presenti medici per la specializzazione selezionata.");
+            if (medici.isEmpty()) {
+                txtRiepilogo.setText("Non sono presenti medici per la specializzazione selezionata.");
+                mostraMessaggio("Non sono presenti medici per la specializzazione selezionata.");
+            } else {
+                txtRiepilogo.setText("Seleziona un medico per visualizzare le fasce disponibili.");
+            }
+        } catch (RuntimeException ex) {
+            mostraErrore("Errore durante il caricamento dei medici", ex);
         }
     }
 
-    private void caricaFasceDisponibili() {
-        MedicoController.MedicoInfo medico = leggiMedicoSelezionato();
+    private void caricaFasceDisponibiliPerMedico() {
+        MedicoItem medicoSelezionato = leggiMedicoSelezionato();
+        pulisciFasce();
 
-        if (medico == null) {
-            mostraFasceOrarie(List.of());
+        if (medicoSelezionato == null) {
             return;
         }
 
-        List<FasciaOrariaItem> fasce = getFasceLiberePerMedico(medico.getId());
-        mostraFasceOrarie(fasce);
-        txtRiepilogo.setText("");
+        try {
+            LocalDate dataInizio = LocalDate.now();
+            LocalDate dataFine = dataInizio.plusMonths(MESI_DA_VISUALIZZARE);
 
-        if (fasce.isEmpty()) {
-            mostraMessaggio("Non ci sono fasce orarie disponibili per il medico selezionato.");
+            List<FasciaOrariaDto> fasce = calendarioController.getDisponibilitaPerMedico(
+                    medicoSelezionato.getDto().id(),
+                    dataInizio,
+                    dataFine
+            );
+
+            mostraFasceOrarie(fasce);
+
+            if (fasce.isEmpty()) {
+                txtRiepilogo.setText("Non ci sono fasce orarie disponibili per il medico selezionato.");
+                mostraMessaggio("Non ci sono fasce orarie disponibili per il medico selezionato.");
+            } else {
+                txtRiepilogo.setText("Seleziona una fascia oraria e conferma la prenotazione.");
+            }
+        } catch (RuntimeException ex) {
+            mostraErrore("Errore durante il caricamento delle fasce disponibili", ex);
         }
-    }
-
-    private List<FasciaOrariaItem> getFasceLiberePerMedico(Long idMedico) {
-        Medico medico = gestorePersistenza.trovaPerId(Medico.class, idMedico);
-
-        if (medico == null) {
-            return List.of();
-        }
-
-        List<FasciaOraria> fasce = gestorePersistenza.cercaPerCampo(
-                FasciaOraria.class,
-                "medico",
-                medico
-        );
-
-        return fasce.stream()
-                .filter(fascia -> fascia.getStato() == StatoFascia.LIBERA)
-                .filter(fascia -> fascia.getData() == null || !fascia.getData().isBefore(LocalDate.now()))
-                .sorted(Comparator.comparing(FasciaOraria::getData)
-                        .thenComparing(FasciaOraria::getOraInizio))
-                .map(this::toFasciaOrariaItem)
-                .toList();
-    }
-
-    private FasciaOrariaItem toFasciaOrariaItem(FasciaOraria fascia) {
-        String medico = "";
-
-        if (fascia.getMedico() != null) {
-            medico = fascia.getMedico().getCognome() + " " + fascia.getMedico().getNome();
-        }
-
-        return new FasciaOrariaItem(
-                fascia.getId(),
-                fascia.getData(),
-                fascia.getOraInizio(),
-                fascia.getOraFine(),
-                medico
-        );
     }
 
     private void confermaPrenotazione() {
@@ -236,86 +190,196 @@ public class PrenotazioneVisitaView extends JFrame {
             return;
         }
 
-        FasciaOrariaItem fascia = leggiFasciaSelezionata();
-
-        if (fascia == null) {
+        FasciaOrariaItem fasciaSelezionata = leggiFasciaSelezionata();
+        if (fasciaSelezionata == null) {
             mostraMessaggio("Seleziona una fascia oraria prima di confermare la prenotazione.");
             return;
         }
 
-        boolean disponibile = prenotazioneController.verificaDisponibilitaFascia(fascia.getId());
+        try {
+            StatoFascia statoCorrente = calendarioController.verificaDisponibilitaFascia(
+                    fasciaSelezionata.getDto().id()
+            );
 
-        if (!disponibile) {
-            mostraMessaggio("La fascia oraria selezionata non è più disponibile. Scegli una nuova fascia.");
-            caricaFasceDisponibili();
-            return;
+            if (statoCorrente != StatoFascia.LIBERA) {
+                mostraMessaggio("La fascia oraria selezionata non è più disponibile. Scegli una nuova fascia.");
+                caricaFasceDisponibiliPerMedico();
+                return;
+            }
+
+            prenotazioneController.effettuaPrenotazione(
+                    idPazienteAutenticato,
+                    fasciaSelezionata.getDto().id()
+            );
+
+            mostraRiepilogoPrenotazioneConfermata(fasciaSelezionata);
+            mostraMessaggio("Prenotazione registrata correttamente. È stata inviata una notifica di conferma.");
+            caricaFasceDisponibiliPerMedico();
+        } catch (RuntimeException ex) {
+            mostraErrore("Prenotazione non completata", ex);
+            caricaFasceDisponibiliPerMedico();
         }
-
-        boolean prenotazioneEffettuata = prenotazioneController.effettuaPrenotazione(
-                idPazienteAutenticato,
-                fascia.getId()
-        );
-
-        if (!prenotazioneEffettuata) {
-            mostraMessaggio("Prenotazione non completata. Verifica paziente e fascia oraria selezionata.");
-            caricaFasceDisponibili();
-            return;
-        }
-
-        mostraRiepilogo(fascia);
-        mostraMessaggio("Prenotazione registrata correttamente. È stata inviata una notifica di conferma.");
-        caricaFasceDisponibili();
     }
 
-    private void mostraRiepilogo(FasciaOrariaItem fascia) {
+    private void mostraSpecializzazioni(List<SpecializzazioneDto> specializzazioni) {
+        DefaultComboBoxModel<SpecializzazioneItem> model = new DefaultComboBoxModel<>();
+
+        for (SpecializzazioneDto specializzazione : specializzazioni) {
+            model.addElement(new SpecializzazioneItem(specializzazione));
+        }
+
+        cmbSpecializzazioni.setModel(model);
+    }
+
+    private void mostraMedici(List<MedicoDto> medici) {
+        DefaultComboBoxModel<MedicoItem> model = new DefaultComboBoxModel<>();
+
+        for (MedicoDto medico : medici) {
+            model.addElement(new MedicoItem(medico));
+        }
+
+        cmbMedici.setModel(model);
+    }
+
+    private void mostraFasceOrarie(List<FasciaOrariaDto> fasce) {
+        modelloFasce.clear();
+
+        for (FasciaOrariaDto fascia : fasce) {
+            aggiungiFasciaAlModello(fascia);
+        }
+
+        btnConferma.setEnabled(false);
+    }
+
+    private void aggiungiFasciaAlModello(FasciaOrariaDto fascia) {
+        modelloFasce.addElement(new FasciaOrariaItem(fascia));
+    }
+
+    private SpecializzazioneItem leggiSpecializzazioneSelezionata() {
+        return (SpecializzazioneItem) cmbSpecializzazioni.getSelectedItem();
+    }
+
+    private MedicoItem leggiMedicoSelezionato() {
+        return (MedicoItem) cmbMedici.getSelectedItem();
+    }
+
+    private FasciaOrariaItem leggiFasciaSelezionata() {
+        return listaFasce.getSelectedValue();
+    }
+
+    private void pulisciMedici() {
+        cmbMedici.setModel(new DefaultComboBoxModel<MedicoItem>());
+        cmbMedici.setEnabled(false);
+        btnAggiornaFasce.setEnabled(false);
+    }
+
+    private void pulisciFasce() {
+        modelloFasce.clear();
+        btnConferma.setEnabled(false);
+    }
+
+    private void aggiornaRiepilogoSelezione() {
+        FasciaOrariaItem fascia = leggiFasciaSelezionata();
+        MedicoItem medico = leggiMedicoSelezionato();
+
+        btnConferma.setEnabled(fascia != null);
+
+        if (fascia == null) {
+            return;
+        }
+
+        String nomeMedico = medico != null ? medico.toString() : "Medico selezionato";
+
+        txtRiepilogo.setText(
+                "Riepilogo prenotazione da confermare:\n"
+                        + "Paziente ID: " + idPazienteAutenticato + "\n"
+                        + "Medico: " + nomeMedico + "\n"
+                        + "Data visita: " + formattaData(fascia.getDto().data()) + "\n"
+                        + "Orario: " + fascia.getDto().orainizio() + " - " + fascia.getDto().oraFine() + "\n"
+                        + "Stato fascia: " + fascia.getDto().stato()
+        );
+    }
+
+    private void mostraRiepilogoPrenotazioneConfermata(FasciaOrariaItem fascia) {
+        MedicoItem medico = leggiMedicoSelezionato();
+        String nomeMedico = medico != null ? medico.toString() : "Medico selezionato";
+
         txtRiepilogo.setText(
                 "Prenotazione confermata.\n"
                         + "Paziente ID: " + idPazienteAutenticato + "\n"
-                        + "Medico: " + fascia.getMedico() + "\n"
-                        + "Data visita: " + fascia.getData() + "\n"
-                        + "Orario: " + fascia.getOraInizio() + " - " + fascia.getOraFine() + "\n"
-                        + "Stato: PRENOTATA"
+                        + "Medico: " + nomeMedico + "\n"
+                        + "Data visita: " + formattaData(fascia.getDto().data()) + "\n"
+                        + "Orario: " + fascia.getDto().orainizio() + " - " + fascia.getDto().oraFine() + "\n"
+                        + "Stato prenotazione: PRENOTATA"
         );
     }
 
-    private static class FasciaOrariaItem {
-        private final Long id;
-        private final LocalDate data;
-        private final LocalTime oraInizio;
-        private final LocalTime oraFine;
-        private final String medico;
-
-        private FasciaOrariaItem(Long id, LocalDate data, LocalTime oraInizio, LocalTime oraFine, String medico) {
-            this.id = id;
-            this.data = data;
-            this.oraInizio = oraInizio;
-            this.oraFine = oraFine;
-            this.medico = medico;
+    private String formattaData(LocalDate data) {
+        if (data == null) {
+            return "Data non disponibile";
         }
 
-        private Long getId() {
-            return id;
+        return data.format(DATA_FORMATTER);
+    }
+
+    private void mostraMessaggio(String messaggio) {
+        JOptionPane.showMessageDialog(this, messaggio);
+    }
+
+    private void mostraErrore(String titolo, RuntimeException ex) {
+        String dettaglio = ex.getMessage() != null ? ex.getMessage() : "Errore non specificato";
+        JOptionPane.showMessageDialog(this, titolo + ":\n" + dettaglio, "Errore", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private static class SpecializzazioneItem {
+        private final SpecializzazioneDto dto;
+
+        private SpecializzazioneItem(SpecializzazioneDto dto) {
+            this.dto = dto;
         }
 
-        private LocalDate getData() {
-            return data;
-        }
-
-        private LocalTime getOraInizio() {
-            return oraInizio;
-        }
-
-        private LocalTime getOraFine() {
-            return oraFine;
-        }
-
-        private String getMedico() {
-            return medico;
+        private SpecializzazioneDto getDto() {
+            return dto;
         }
 
         @Override
         public String toString() {
-            return data + " | " + oraInizio + " - " + oraFine + " | " + medico;
+            return dto.nomeSpecializzazione();
+        }
+    }
+
+    private static class MedicoItem {
+        private final MedicoDto dto;
+
+        private MedicoItem(MedicoDto dto) {
+            this.dto = dto;
+        }
+
+        private MedicoDto getDto() {
+            return dto;
+        }
+
+        @Override
+        public String toString() {
+            return dto.cognome() + " " + dto.nome();
+        }
+    }
+
+    private static class FasciaOrariaItem {
+        private final FasciaOrariaDto dto;
+
+        private FasciaOrariaItem(FasciaOrariaDto dto) {
+            this.dto = dto;
+        }
+
+        private FasciaOrariaDto getDto() {
+            return dto;
+        }
+
+        @Override
+        public String toString() {
+            String data = dto.data() != null ? dto.data().format(DATA_FORMATTER) : "Data non disponibile";
+            return data + " | " + dto.orainizio() + " - " + dto.oraFine();
         }
     }
 }
