@@ -7,6 +7,7 @@ import com.ambulatorio.dto.response.FasciaOrariaDto;
 import com.ambulatorio.dto.response.MedicoDto;
 import com.ambulatorio.dto.response.SpecializzazioneDto;
 import com.ambulatorio.entity.enums.StatoFascia;
+import com.ambulatorio.utils.SessioneUtente;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
@@ -55,13 +56,12 @@ public class PrenotazioneVisitaView extends JFrame {
     public PrenotazioneVisitaView(
             MedicoController medicoController,
             CalendarioController calendarioController,
-            PrenotazioneController prenotazioneController,
-            Long idPazienteAutenticato
+            PrenotazioneController prenotazioneController
     ) {
         this.medicoController = Objects.requireNonNull(medicoController, "Il MedicoController non può essere null");
         this.calendarioController = Objects.requireNonNull(calendarioController, "Il CalendarioController non può essere null");
         this.prenotazioneController = Objects.requireNonNull(prenotazioneController, "Il PrenotazioneController non può essere null");
-        this.idPazienteAutenticato = idPazienteAutenticato;
+        this.idPazienteAutenticato = SessioneUtente.getInstance().getIdUtente();
 
         inizializzaFrame();
         inizializzaComponenti();

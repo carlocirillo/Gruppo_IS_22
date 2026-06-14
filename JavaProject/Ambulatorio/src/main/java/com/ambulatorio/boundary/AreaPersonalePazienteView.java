@@ -42,7 +42,7 @@ public class AreaPersonalePazienteView {
     private final MedicoController medicoController;
     private final CalendarioController calendarioController;
     private final PrenotazioneController prenotazioneController;
-    private final Long idPazienteFallback;
+    private final Long idPaziente;
 
     public AreaPersonalePazienteView(
             Navigatore navigatore,
@@ -50,42 +50,17 @@ public class AreaPersonalePazienteView {
             CalendarioController calendarioController,
             PrenotazioneController prenotazioneController
     ) {
-        this(navigatore, medicoController, calendarioController, prenotazioneController, null);
-    }
-
-    public AreaPersonalePazienteView(
-            Navigatore navigatore,
-            MedicoController medicoController,
-            CalendarioController calendarioController,
-            PrenotazioneController prenotazioneController,
-            Long idPazienteFallback
-    ) {
         this.navigatore = navigatore;
-        this.medicoController = Objects.requireNonNull(medicoController, "Il MedicoController non può essere null");
-        this.calendarioController = Objects.requireNonNull(calendarioController, "Il CalendarioController non può essere null");
-        this.prenotazioneController = Objects.requireNonNull(prenotazioneController, "Il PrenotazioneController non può essere null");
-        this.idPazienteFallback = idPazienteFallback;
+        this.medicoController = medicoController;
+        this.calendarioController = calendarioController;
+        this.prenotazioneController = prenotazioneController;
+        this.idPaziente = SessioneUtente.getInstance().getIdUtente();
 
         inizializzaComponenti();
         collegaEventi();
+        caricaStoricoPrenotazioniSilenzioso();
     }
 
-    public AreaPersonalePazienteView(
-            MedicoController medicoController,
-            CalendarioController calendarioController,
-            PrenotazioneController prenotazioneController
-    ) {
-        this(null, medicoController, calendarioController, prenotazioneController, null);
-    }
-
-    public AreaPersonalePazienteView(
-            MedicoController medicoController,
-            CalendarioController calendarioController,
-            PrenotazioneController prenotazioneController,
-            Long idPazienteFallback
-    ) {
-        this(null, medicoController, calendarioController, prenotazioneController, idPazienteFallback);
-    }
 
     private void inizializzaComponenti() {
         lblInfo.setText("Scegli una funzione dell'area personale paziente.");
@@ -106,35 +81,16 @@ public class AreaPersonalePazienteView {
     }
 
     private void collegaEventi() {
-        btnPrenotaVisita.addActionListener(e -> apriPrenotazioneVisita());
+        btnPrenotaVisita.addActionListener(e -> navigatore.apriAreaPrenotaVisita());
+
         btnStoricoPrenotazioni.addActionListener(e -> caricaStoricoPrenotazioni());
-        btnLogout.addActionListener(e -> mostraMessaggio("Funzione non implementata."));
-    }
 
-    private void apriPrenotazioneVisita() {
-        Long idPaziente = leggiIdPazienteAutenticato();
-
-        if (idPaziente == null) {
-            mostraMessaggio("Impossibile aprire la prenotazione: paziente non autenticato.");
-            return;
-        }
-
-        PrenotazioneVisitaView prenotazioneVisitaView = new PrenotazioneVisitaView(
-                medicoController,
-                calendarioController,
-                prenotazioneController,
-                idPaziente
-        );
-
-        prenotazioneVisitaView.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosed(WindowEvent e) {
-                caricaStoricoPrenotazioniSilenzioso();
-            }
+        btnLogout.addActionListener(e -> {
+            SessioneUtente.getInstance().logout(); // Distrugge il token in memoria
+            navigatore.apriMainPage();             // Torna alla schermata iniziale
         });
-
-        prenotazioneVisitaView.setVisible(true);
     }
+
 
     private void caricaStoricoPrenotazioni() {
         Long idPaziente = leggiIdPazienteAutenticato();
@@ -205,7 +161,7 @@ public class AreaPersonalePazienteView {
             return idDaSessione;
         }
 
-        return idPazienteFallback;
+        return idPaziente;
     }
 
     private LocalDate dataPrenotazioneSicura(PrenotazioneDto prenotazione) {
