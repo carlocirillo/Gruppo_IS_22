@@ -9,6 +9,7 @@ import com.ambulatorio.dto.response.SpecializzazioneDto;
 import com.ambulatorio.entity.enums.StatoFascia;
 
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -19,12 +20,18 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
+import java.awt.Component;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
-
+/**
+ * Boundary del caso d'uso PrenotaVisita.
+ *
+ * La view riceve i controller dal Main e non crea né controller né GestorePersistenza.
+ * Lavora direttamente sui DTO restituiti dai controller, senza classi Item intermedie.
+ */
 public class PrenotazioneVisitaView extends JFrame {
 
     public JPanel contentPane;
@@ -33,9 +40,9 @@ public class PrenotazioneVisitaView extends JFrame {
     private JLabel lblMedico;
     private JLabel lblFasce;
     private JLabel lblRiepilogo;
-    private JComboBox<SpecializzazioneItem> cmbSpecializzazioni;
-    private JComboBox<MedicoItem> cmbMedici;
-    private JList<FasciaOrariaItem> listaFasce;
+    private JComboBox<SpecializzazioneDto> cmbSpecializzazioni;
+    private JComboBox<MedicoDto> cmbMedici;
+    private JList<FasciaOrariaDto> listaFasce;
     private JTextArea txtRiepilogo;
     private JButton btnAggiornaFasce;
     private JButton btnConferma;
@@ -43,7 +50,7 @@ public class PrenotazioneVisitaView extends JFrame {
     private static final int MESI_DA_VISUALIZZARE = 3;
     private static final DateTimeFormatter DATA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    private DefaultListModel<FasciaOrariaItem> modelloFasce;
+    private DefaultListModel<FasciaOrariaDto> modelloFasce;
 
     private final MedicoController medicoController;
     private final CalendarioController calendarioController;
@@ -80,6 +87,10 @@ public class PrenotazioneVisitaView extends JFrame {
         listaFasce.setModel(modelloFasce);
         listaFasce.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
+        configuraRendererSpecializzazioni();
+        configuraRendererMedici();
+        configuraRendererFasce();
+
         txtRiepilogo.setEditable(false);
         txtRiepilogo.setLineWrap(true);
         txtRiepilogo.setWrapStyleWord(true);
@@ -88,6 +99,75 @@ public class PrenotazioneVisitaView extends JFrame {
         cmbMedici.setEnabled(false);
         btnAggiornaFasce.setEnabled(false);
         btnConferma.setEnabled(false);
+    }
+
+    private void configuraRendererSpecializzazioni() {
+        cmbSpecializzazioni.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list,
+                    Object value,
+                    int index,
+                    boolean isSelected,
+                    boolean cellHasFocus
+            ) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+                if (value instanceof SpecializzazioneDto specializzazione) {
+                    setText(specializzazione.nomeSpecializzazione());
+                } else {
+                    setText("");
+                }
+
+                return this;
+            }
+        });
+    }
+
+    private void configuraRendererMedici() {
+        cmbMedici.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list,
+                    Object value,
+                    int index,
+                    boolean isSelected,
+                    boolean cellHasFocus
+            ) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+                if (value instanceof MedicoDto medico) {
+                    setText(formattaMedico(medico));
+                } else {
+                    setText("");
+                }
+
+                return this;
+            }
+        });
+    }
+
+    private void configuraRendererFasce() {
+        listaFasce.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(
+                    JList<?> list,
+                    Object value,
+                    int index,
+                    boolean isSelected,
+                    boolean cellHasFocus
+            ) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+                if (value instanceof FasciaOrariaDto fascia) {
+                    setText(formattaFascia(fascia));
+                } else {
+                    setText("");
+                }
+
+                return this;
+            }
+        });
     }
 
     private void collegaEventi() {
@@ -124,7 +204,7 @@ public class PrenotazioneVisitaView extends JFrame {
     }
 
     private void caricaMediciPerSpecializzazione() {
-        SpecializzazioneItem specializzazioneSelezionata = leggiSpecializzazioneSelezionata();
+        SpecializzazioneDto specializzazioneSelezionata = leggiSpecializzazioneSelezionata();
 
         pulisciMedici();
         pulisciFasce();
@@ -135,7 +215,7 @@ public class PrenotazioneVisitaView extends JFrame {
 
         try {
             List<MedicoDto> medici = medicoController.getMediciBySpecializzazione(
-                    specializzazioneSelezionata.getDto().id()
+                    specializzazioneSelezionata.id()
             );
 
             mostraMedici(medici);
@@ -154,7 +234,7 @@ public class PrenotazioneVisitaView extends JFrame {
     }
 
     private void caricaFasceDisponibiliPerMedico() {
-        MedicoItem medicoSelezionato = leggiMedicoSelezionato();
+        MedicoDto medicoSelezionato = leggiMedicoSelezionato();
         pulisciFasce();
 
         if (medicoSelezionato == null) {
@@ -166,7 +246,7 @@ public class PrenotazioneVisitaView extends JFrame {
             LocalDate dataFine = dataInizio.plusMonths(MESI_DA_VISUALIZZARE);
 
             List<FasciaOrariaDto> fasce = calendarioController.getDisponibilitaPerMedico(
-                    medicoSelezionato.getDto().id(),
+                    medicoSelezionato.id(),
                     dataInizio,
                     dataFine
             );
@@ -190,7 +270,7 @@ public class PrenotazioneVisitaView extends JFrame {
             return;
         }
 
-        FasciaOrariaItem fasciaSelezionata = leggiFasciaSelezionata();
+        FasciaOrariaDto fasciaSelezionata = leggiFasciaSelezionata();
         if (fasciaSelezionata == null) {
             mostraMessaggio("Seleziona una fascia oraria prima di confermare la prenotazione.");
             return;
@@ -198,7 +278,7 @@ public class PrenotazioneVisitaView extends JFrame {
 
         try {
             StatoFascia statoCorrente = calendarioController.verificaDisponibilitaFascia(
-                    fasciaSelezionata.getDto().id()
+                    fasciaSelezionata.id()
             );
 
             if (statoCorrente != StatoFascia.LIBERA) {
@@ -209,7 +289,7 @@ public class PrenotazioneVisitaView extends JFrame {
 
             prenotazioneController.effettuaPrenotazione(
                     idPazienteAutenticato,
-                    fasciaSelezionata.getDto().id()
+                    fasciaSelezionata.id()
             );
 
             mostraRiepilogoPrenotazioneConfermata(fasciaSelezionata);
@@ -222,20 +302,20 @@ public class PrenotazioneVisitaView extends JFrame {
     }
 
     private void mostraSpecializzazioni(List<SpecializzazioneDto> specializzazioni) {
-        DefaultComboBoxModel<SpecializzazioneItem> model = new DefaultComboBoxModel<>();
+        DefaultComboBoxModel<SpecializzazioneDto> model = new DefaultComboBoxModel<>();
 
         for (SpecializzazioneDto specializzazione : specializzazioni) {
-            model.addElement(new SpecializzazioneItem(specializzazione));
+            model.addElement(specializzazione);
         }
 
         cmbSpecializzazioni.setModel(model);
     }
 
     private void mostraMedici(List<MedicoDto> medici) {
-        DefaultComboBoxModel<MedicoItem> model = new DefaultComboBoxModel<>();
+        DefaultComboBoxModel<MedicoDto> model = new DefaultComboBoxModel<>();
 
         for (MedicoDto medico : medici) {
-            model.addElement(new MedicoItem(medico));
+            model.addElement(medico);
         }
 
         cmbMedici.setModel(model);
@@ -245,30 +325,38 @@ public class PrenotazioneVisitaView extends JFrame {
         modelloFasce.clear();
 
         for (FasciaOrariaDto fascia : fasce) {
-            aggiungiFasciaAlModello(fascia);
+            modelloFasce.addElement(fascia);
         }
 
         btnConferma.setEnabled(false);
     }
 
-    private void aggiungiFasciaAlModello(FasciaOrariaDto fascia) {
-        modelloFasce.addElement(new FasciaOrariaItem(fascia));
+    private SpecializzazioneDto leggiSpecializzazioneSelezionata() {
+        Object selezionato = cmbSpecializzazioni.getSelectedItem();
+
+        if (selezionato instanceof SpecializzazioneDto specializzazione) {
+            return specializzazione;
+        }
+
+        return null;
     }
 
-    private SpecializzazioneItem leggiSpecializzazioneSelezionata() {
-        return (SpecializzazioneItem) cmbSpecializzazioni.getSelectedItem();
+    private MedicoDto leggiMedicoSelezionato() {
+        Object selezionato = cmbMedici.getSelectedItem();
+
+        if (selezionato instanceof MedicoDto medico) {
+            return medico;
+        }
+
+        return null;
     }
 
-    private MedicoItem leggiMedicoSelezionato() {
-        return (MedicoItem) cmbMedici.getSelectedItem();
-    }
-
-    private FasciaOrariaItem leggiFasciaSelezionata() {
+    private FasciaOrariaDto leggiFasciaSelezionata() {
         return listaFasce.getSelectedValue();
     }
 
     private void pulisciMedici() {
-        cmbMedici.setModel(new DefaultComboBoxModel<MedicoItem>());
+        cmbMedici.setModel(new DefaultComboBoxModel<>());
         cmbMedici.setEnabled(false);
         btnAggiornaFasce.setEnabled(false);
     }
@@ -279,8 +367,8 @@ public class PrenotazioneVisitaView extends JFrame {
     }
 
     private void aggiornaRiepilogoSelezione() {
-        FasciaOrariaItem fascia = leggiFasciaSelezionata();
-        MedicoItem medico = leggiMedicoSelezionato();
+        FasciaOrariaDto fascia = leggiFasciaSelezionata();
+        MedicoDto medico = leggiMedicoSelezionato();
 
         btnConferma.setEnabled(fascia != null);
 
@@ -288,30 +376,46 @@ public class PrenotazioneVisitaView extends JFrame {
             return;
         }
 
-        String nomeMedico = medico != null ? medico.toString() : "Medico selezionato";
+        String nomeMedico = medico != null ? formattaMedico(medico) : "Medico selezionato";
 
         txtRiepilogo.setText(
                 "Riepilogo prenotazione da confermare:\n"
                         + "Paziente ID: " + idPazienteAutenticato + "\n"
                         + "Medico: " + nomeMedico + "\n"
-                        + "Data visita: " + formattaData(fascia.getDto().data()) + "\n"
-                        + "Orario: " + fascia.getDto().orainizio() + " - " + fascia.getDto().oraFine() + "\n"
-                        + "Stato fascia: " + fascia.getDto().stato()
+                        + "Data visita: " + formattaData(fascia.data()) + "\n"
+                        + "Orario: " + fascia.orainizio() + " - " + fascia.oraFine() + "\n"
+                        + "Stato fascia: " + fascia.stato()
         );
     }
 
-    private void mostraRiepilogoPrenotazioneConfermata(FasciaOrariaItem fascia) {
-        MedicoItem medico = leggiMedicoSelezionato();
-        String nomeMedico = medico != null ? medico.toString() : "Medico selezionato";
+    private void mostraRiepilogoPrenotazioneConfermata(FasciaOrariaDto fascia) {
+        MedicoDto medico = leggiMedicoSelezionato();
+        String nomeMedico = medico != null ? formattaMedico(medico) : "Medico selezionato";
 
         txtRiepilogo.setText(
                 "Prenotazione confermata.\n"
                         + "Paziente ID: " + idPazienteAutenticato + "\n"
                         + "Medico: " + nomeMedico + "\n"
-                        + "Data visita: " + formattaData(fascia.getDto().data()) + "\n"
-                        + "Orario: " + fascia.getDto().orainizio() + " - " + fascia.getDto().oraFine() + "\n"
+                        + "Data visita: " + formattaData(fascia.data()) + "\n"
+                        + "Orario: " + fascia.orainizio() + " - " + fascia.oraFine() + "\n"
                         + "Stato prenotazione: PRENOTATA"
         );
+    }
+
+    private String formattaMedico(MedicoDto medico) {
+        if (medico == null) {
+            return "";
+        }
+
+        return medico.cognome() + " " + medico.nome();
+    }
+
+    private String formattaFascia(FasciaOrariaDto fascia) {
+        if (fascia == null) {
+            return "";
+        }
+
+        return formattaData(fascia.data()) + " | " + fascia.orainizio() + " - " + fascia.oraFine();
     }
 
     private String formattaData(LocalDate data) {
@@ -329,57 +433,5 @@ public class PrenotazioneVisitaView extends JFrame {
     private void mostraErrore(String titolo, RuntimeException ex) {
         String dettaglio = ex.getMessage() != null ? ex.getMessage() : "Errore non specificato";
         JOptionPane.showMessageDialog(this, titolo + ":\n" + dettaglio, "Errore", JOptionPane.ERROR_MESSAGE);
-    }
-
-    private static class SpecializzazioneItem {
-        private final SpecializzazioneDto dto;
-
-        private SpecializzazioneItem(SpecializzazioneDto dto) {
-            this.dto = dto;
-        }
-
-        private SpecializzazioneDto getDto() {
-            return dto;
-        }
-
-        @Override
-        public String toString() {
-            return dto.nomeSpecializzazione();
-        }
-    }
-
-    private static class MedicoItem {
-        private final MedicoDto dto;
-
-        private MedicoItem(MedicoDto dto) {
-            this.dto = dto;
-        }
-
-        private MedicoDto getDto() {
-            return dto;
-        }
-
-        @Override
-        public String toString() {
-            return dto.cognome() + " " + dto.nome();
-        }
-    }
-
-    private static class FasciaOrariaItem {
-        private final FasciaOrariaDto dto;
-
-        private FasciaOrariaItem(FasciaOrariaDto dto) {
-            this.dto = dto;
-        }
-
-        private FasciaOrariaDto getDto() {
-            return dto;
-        }
-
-        @Override
-        public String toString() {
-            String data = dto.data() != null ? dto.data().format(DATA_FORMATTER) : "Data non disponibile";
-            return data + " | " + dto.orainizio() + " - " + dto.oraFine();
-        }
     }
 }
