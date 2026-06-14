@@ -1,6 +1,7 @@
 package com.ambulatorio.utils;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
@@ -45,5 +46,15 @@ public class JwtUtils {
 
                 // Compattazione in una stringa URL-safe
                 .compact();
+    }
+
+    public static String estraiRuolo(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.get("ruolo", String.class);
     }
 }

@@ -83,6 +83,15 @@ public class InizializzatoreDatabase {
         paziente2.setRuolo(Ruolo.PAZIENTE);
         gestore.salva(paziente2);
 
+        // 4.5 Creazione Amministratore
+        Amministratore amministratore1 = new Amministratore();
+        amministratore1.setNome("Amministratore");
+        amministratore1.setCognome("Amministratore");
+        amministratore1.setEmail("admin@gmail.com");
+        amministratore1.setPasswordHash(PasswordUtils.generaPasswordHash("admin"));
+        amministratore1.setRuolo(Ruolo.AMMINISTRATORE);
+        gestore.salva(amministratore1);
+
         // 5. Creazione Fasce Orarie e Prenotazioni
         
         // Fascia passata per Medico 1 (Mario Rossi) - Oggi, 2 ore fa

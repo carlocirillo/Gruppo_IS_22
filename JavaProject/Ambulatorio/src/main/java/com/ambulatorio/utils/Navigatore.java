@@ -1,8 +1,6 @@
 package com.ambulatorio.utils;
 
-import com.ambulatorio.boundary.LoginView;
-import com.ambulatorio.boundary.MainPage;
-import com.ambulatorio.boundary.RegistrazioneView;
+import com.ambulatorio.boundary.*;
 import com.ambulatorio.controller.AuthController;
 import com.ambulatorio.controller.CalendarioController;
 import com.ambulatorio.controller.MedicoController;
@@ -43,6 +41,21 @@ public class Navigatore {
 
     public void apriRegistrazione() {
         RegistrazioneView view = new RegistrazioneView(this, authController);
+        cambiaSchermata(view.contentPane);
+    }
+
+    public void apriAreaPaziente() {
+        //RegistrazioneView view = new RegistrazioneView(this, authController);
+        //cambiaSchermata(view.contentPane);
+    }
+
+    public void apriAreaMedico() {
+        AreaMedicoView view = new AreaMedicoView(prenotazioneController, 1); //TODO: cambiare l'1
+        cambiaSchermata(view.contentPane);
+    }
+
+    public void apriAreaAmministratore() {
+        AreaAmministratoreView view = new AreaAmministratoreView(prenotazioneController);
         cambiaSchermata(view.contentPane);
     }
 
