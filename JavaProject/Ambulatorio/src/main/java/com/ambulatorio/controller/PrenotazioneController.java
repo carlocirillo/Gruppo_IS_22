@@ -147,17 +147,47 @@ public class PrenotazioneController {
     /*
      * Metodo aggiunto per recuperare le prenotazioni di un paziente.
      * Serve per lo storico prenotazioni del caso d'uso PrenotaVisita.
-     *
-
-    public List<Prenotazione> getPrenotazioniPaziente(Long idPaziente) {
-
-        return gestore.cercaPerCampo(
-                com.ambulatorio.entity.Prenotazione.class,
+     */
+    public List<PrenotazioneDto> getPrenotazioniPaziente(Long idPaziente) {
+        List<Prenotazione> prenotazioni = gestorePersistenza.cercaPerCampo(
+                Prenotazione.class,
                 "paziente.id",
                 idPaziente
         );
+
+        List<PrenotazioneDto> prenotazioniDto = new ArrayList<>();
+        for (Prenotazione pren : prenotazioni) {
+            PrenotazioneDto prenDto = new PrenotazioneDto(
+                    pren.getId(),
+                    new PazienteDto(
+                            pren.getPaziente().getId(),
+                            pren.getPaziente().getNome(),
+                            pren.getPaziente().getCognome(),
+                            pren.getPaziente().getCodiceFiscale(),
+                            pren.getPaziente().getNumeroCellulare()
+                    ),
+                    new MedicoDto(
+                            pren.getFasciaOraria().getMedico().getId(),
+                            pren.getFasciaOraria().getMedico().getNome(),
+                            pren.getFasciaOraria().getMedico().getCognome(),
+                            new SpecializzazioneDto(
+                                    pren.getFasciaOraria().getMedico().getSpecializzazione().getId(),
+                                    pren.getFasciaOraria().getMedico().getSpecializzazione().getNome()
+                            )
+                    ),
+                    new FasciaOrariaDto(
+                            pren.getFasciaOraria().getId(),
+                            pren.getFasciaOraria().getOraInizio(),
+                            pren.getFasciaOraria().getOraFine(),
+                            pren.getFasciaOraria().getData(),
+                            pren.getFasciaOraria().getStato()
+                    ),
+                    pren.getStato()
+            );
+            prenotazioniDto.add(prenDto);
+        }
+        return prenotazioniDto;
     }
-    */
 
 
     public StatisticheDto calcolaReportStatistiche(LocalDate dataInizio, LocalDate dataFine){

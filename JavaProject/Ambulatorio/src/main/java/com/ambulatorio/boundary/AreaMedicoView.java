@@ -1,7 +1,7 @@
 package com.ambulatorio.boundary;
 
 import com.ambulatorio.controller.PrenotazioneController;
-import com.ambulatorio.entity.Prenotazione;
+import com.ambulatorio.dto.response.PrenotazioneDto;
 import com.ambulatorio.entity.enums.StatoPrenotazione;
 
 import javax.swing.*;
@@ -26,7 +26,7 @@ public class AreaMedicoView {
     private JLabel lblDataSelezionata;
 
     private final PrenotazioneController prenotazioneController;
-    private List<Prenotazione> prenotazioniVisualizzate;
+    private List<PrenotazioneDto> prenotazioniVisualizzate;
     private LocalDate dataVisualizzata;
     private long idMedicoCorrente;
 
@@ -87,23 +87,23 @@ public class AreaMedicoView {
         lblDataSelezionata.setText(dataVisualizzata.format(formatter));
 
         // Recupero prenotazioni reali dal Controller
-        List<Prenotazione> tutteLePrenotazioni = prenotazioneController.getPrenotazioniMedico(idMedicoCorrente);
+        List<PrenotazioneDto> tutteLePrenotazioni = prenotazioneController.getPrenotazioniMedico(idMedicoCorrente);
 
         // Filtraggio per la data correntemente visualizzata
         prenotazioniVisualizzate = tutteLePrenotazioni.stream()
-                .filter(p -> p.getFasciaOraria().getData().equals(dataVisualizzata))
-                .sorted((p1, p2) -> p1.getFasciaOraria().getOraInizio().compareTo(p2.getFasciaOraria().getOraInizio()))
+                .filter(p -> p.fasciaOraria().data().equals(dataVisualizzata))
+                .sorted((p1, p2) -> p1.fasciaOraria().orainizio().compareTo(p2.fasciaOraria().orainizio()))
                 .collect(Collectors.toList());
 
         // Popolamento tabella
         DefaultTableModel model = (DefaultTableModel) tblAgenda.getModel();
         model.setRowCount(0);
 
-        for (Prenotazione p : prenotazioniVisualizzate) {
+        for (PrenotazioneDto p : prenotazioniVisualizzate) {
             Object[] row = {
-                    p.getFasciaOraria().toString(),
-                    p.getPaziente().getNome() + " " + p.getPaziente().getCognome(),
-                    p.getStato()
+                    p.fasciaOraria().orainizio() + " - " + p.fasciaOraria().oraFine(),
+                    p.paziente().nome() + " " + p.paziente().cognome(),
+                    p.stato()
             };
             model.addRow(row);
         }
@@ -112,8 +112,8 @@ public class AreaMedicoView {
     private void gestisciSelezione() {
         int selectedRow = tblAgenda.getSelectedRow();
         if (selectedRow >= 0 && selectedRow < prenotazioniVisualizzate.size()) {
-            Prenotazione p = prenotazioniVisualizzate.get(selectedRow);
-            LocalDateTime oraInizioVisita = LocalDateTime.of(p.getFasciaOraria().getData(), p.getFasciaOraria().getOraInizio());
+            PrenotazioneDto p = prenotazioniVisualizzate.get(selectedRow);
+            LocalDateTime oraInizioVisita = LocalDateTime.of(p.fasciaOraria().data(), p.fasciaOraria().orainizio());
 
             // Se la fascia oraria è già passata, apri il pop-up modale
             if (oraInizioVisita.isBefore(LocalDateTime.now())) {
@@ -122,7 +122,7 @@ public class AreaMedicoView {
         }
     }
 
-    private void mostraPopUpAggiornamento(Prenotazione p) {
+    private void mostraPopUpAggiornamento(PrenotazioneDto p) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(contentPane), "Aggiorna Stato Visita", true);
         dialog.setLayout(new BorderLayout(10, 10));
         
@@ -141,14 +141,14 @@ public class AreaMedicoView {
         btnConferma.addActionListener(e -> {
             StatoPrenotazione nuovoStato = (StatoPrenotazione) comboStato.getSelectedItem();
             
-            boolean successo = prenotazioneController.aggiornaStatoPrenotazione(p.getId(), nuovoStato, idMedicoCorrente);
-            
-            if (successo) {
+            try {
+                prenotazioneController.aggiornaStatoPrenotazione(idMedicoCorrente, p.id(), nuovoStato);
                 JOptionPane.showMessageDialog(dialog, "Stato aggiornato!", "Successo", JOptionPane.INFORMATION_MESSAGE);
                 dialog.dispose();
                 aggiornaInterfaccia();
-            } else {
-                JOptionPane.showMessageDialog(dialog, "Errore aggiornamento.", "Errore", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "Errore durante l'aggiornamento dei dati", "Errore", JOptionPane.ERROR_MESSAGE);
+                // Il sistema si "blocca" nel senso che non chiude il dialog di errore e non aggiorna la tabella
             }
         });
 
