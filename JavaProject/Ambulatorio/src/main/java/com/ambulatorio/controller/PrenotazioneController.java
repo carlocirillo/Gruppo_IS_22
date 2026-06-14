@@ -14,36 +14,38 @@ import java.util.List;
 import java.util.Map;
 
 public class PrenotazioneController {
-
+    private static PrenotazioneController instance;
     private final CalendarioController calendarioController;
     private final NotificaController notificaController;
-    private final GestorePersistenza gestorePersistenza;
+    private final GestorePersistenza gestorePersistenza = new GestorePersistenza();
 
-    public PrenotazioneController(CalendarioController calendarioController, NotificaController notificaController,
-                                  GestorePersistenza gestorePersistenza){
-
+    private PrenotazioneController(CalendarioController calendarioController, NotificaController notificaController){
         this.calendarioController = calendarioController;
         this.notificaController = notificaController;
-        this.gestorePersistenza = gestorePersistenza;
     }
 
-    public boolean setStatoPrenotazione(Long idPrenotazione, StatoPrenotazione nuovoStato) {
-        try {
+    public static PrenotazioneController getInstance(){
+        if (instance == null){
+            instance = new PrenotazioneController(CalendarioController.getInstance(), NotificaController.getInstance());
+        }
+        return instance;
+    }
 
+    public boolean aggiornaStatoPrenotazione(long idPrenotazione, StatoPrenotazione nuovoStato, long idMedico) {
+        // Validazione dello stato: deve essere EFFETTUATA o NON_PRESENTATO
+        if (nuovoStato != StatoPrenotazione.EFFETTUATA && nuovoStato != StatoPrenotazione.NON_PRESENTATO) {
+            return false;
+        }
+
+        try {
+            // Recupero della prenotazione dal database tramite ID
             Prenotazione prenotazione = gestorePersistenza.trovaPerId(Prenotazione.class, idPrenotazione);
 
             if (prenotazione != null) {
+                // Impostazione del nuovo stato
                 prenotazione.setStato(nuovoStato);
+                // Aggiornamento nel database richiamando aggiornaOggetto
                 gestorePersistenza.aggiorna(prenotazione);
-
-                // Se la prenotazione viene annullata, la fascia oraria torna libera
-                if (nuovoStato == com.ambulatorio.entity.enums.StatoPrenotazione.ANNULLATA) {
-                    com.ambulatorio.entity.FasciaOraria fascia = prenotazione.getFasciaOraria();
-                    if (fascia != null) {
-                        fascia.setStato(com.ambulatorio.entity.enums.StatoFascia.LIBERA);
-                        gestorePersistenza.aggiorna(fascia);
-                    }
-                }
                 return true;
             }
             return false;

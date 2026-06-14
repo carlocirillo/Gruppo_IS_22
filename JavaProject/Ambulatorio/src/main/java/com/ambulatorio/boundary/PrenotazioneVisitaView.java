@@ -65,11 +65,8 @@ public class PrenotazioneVisitaView extends JFrame {
 
     public PrenotazioneVisitaView(Long idPazienteAutenticato) {
         this.idPazienteAutenticato = idPazienteAutenticato;
-        this.medicoController = new MedicoController();
-        this.prenotazioneController = new PrenotazioneController(
-                new CalendarioController(),
-                new NotificaController()
-        );
+        this.medicoController = MedicoController.getInstance();
+        this.prenotazioneController = PrenotazioneController.getInstance();
         this.gestorePersistenza = new GestorePersistenza();
 
         inizializzaFrame();
