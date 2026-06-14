@@ -1,6 +1,8 @@
 package com.ambulatorio.controller;
 
 import com.ambulatorio.database.GestorePersistenza;
+import com.ambulatorio.dto.response.MedicoDto;
+import com.ambulatorio.dto.response.SpecializzazioneDto;
 import com.ambulatorio.entity.Medico;
 import com.ambulatorio.entity.Specializzazione;
 
@@ -16,159 +18,77 @@ import java.util.Map;
  * prima la specializzazione e poi il medico desiderato.
  */
 public class MedicoController {
-    private static MedicoController instance;
     private final GestorePersistenza gestorePersistenza;
 
-    private MedicoController() {
-        this(new GestorePersistenza());
+    public MedicoController(GestorePersistenza gestore) {
+        this.gestorePersistenza = gestore;
     }
 
-    private MedicoController(GestorePersistenza gestorePersistenza) {
-        this.gestorePersistenza = gestorePersistenza;
-    }
+    public List<SpecializzazioneDto> getAllSpecializzazioni() {
+        List<Specializzazione> specializzazioni = gestorePersistenza.cercaTutti(Specializzazione.class);
 
-    public static MedicoController getInstance() {
-        if (instance == null) {
-            instance = new MedicoController();
+        List<SpecializzazioneDto> specializzazioniDto = new ArrayList<SpecializzazioneDto>();
+
+        for (Specializzazione spec : specializzazioni) {
+            SpecializzazioneDto specDto = new SpecializzazioneDto(
+                    spec.getId(),
+                    spec.getNome()
+            );
+            specializzazioniDto.add(specDto);
         }
-        return instance;
+
+        return specializzazioniDto;
     }
 
-    public List<SpecializzazioneInfo> getAllSpecializzazioni() {
-        List<Specializzazione> specializzazioni = gestorePersistenza.cercaPerCampi(
-                Specializzazione.class,
-                Map.of()
-        );
+    public List<MedicoDto> getAllMedici() {
+        List<Medico> medici = gestorePersistenza.cercaTutti(Medico.class);
 
-        return specializzazioni.stream()
-                .sorted(Comparator.comparing(Specializzazione::getNome, String.CASE_INSENSITIVE_ORDER))
-                .map(this::toSpecializzazioneInfo)
-                .toList();
+        List<MedicoDto> mediciDto = new ArrayList<MedicoDto>();
+
+        for (Medico medico : medici) {
+            MedicoDto medicoDto = new MedicoDto(
+                    medico.getId(),
+                    medico.getNome(),
+                    medico.getCognome(),
+                    new SpecializzazioneDto(
+                            medico.getSpecializzazione().getId(),
+                            medico.getSpecializzazione().getNome()
+                    )
+            );
+            mediciDto.add(medicoDto);
+        }
+
+        return mediciDto;
     }
 
-    public List<MedicoInfo> getAllMedici() {
-        List<Medico> medici = gestorePersistenza.cercaPerCampi(Medico.class, Map.of());
-
-        return medici.stream()
-                .sorted(Comparator.comparing(Medico::getCognome, String.CASE_INSENSITIVE_ORDER)
-                        .thenComparing(Medico::getNome, String.CASE_INSENSITIVE_ORDER))
-                .map(this::toMedicoInfo)
-                .toList();
-    }
-
-    public List<MedicoInfo> getMediciBySpecializzazione(Long idSpecializzazione) {
+    public List<MedicoDto> getMediciBySpecializzazione(Long idSpecializzazione) {
         if (idSpecializzazione == null) {
             return new ArrayList<>();
         }
 
-        Specializzazione specializzazione = gestorePersistenza.trovaPerId(
-                Specializzazione.class,
-                idSpecializzazione
-        );
+        Specializzazione specializzazione = gestorePersistenza.trovaPerId(Specializzazione.class, idSpecializzazione);
 
         if (specializzazione == null) {
             return new ArrayList<>();
         }
 
-        List<Medico> medici = gestorePersistenza.cercaPerCampo(
-                Medico.class,
-                "specializzazione",
-                specializzazione
-        );
+        List<Medico> medici = gestorePersistenza.cercaPerCampo(Medico.class,"specializzazione", specializzazione);
 
-        return medici.stream()
-                .sorted(Comparator.comparing(Medico::getCognome, String.CASE_INSENSITIVE_ORDER)
-                        .thenComparing(Medico::getNome, String.CASE_INSENSITIVE_ORDER))
-                .map(this::toMedicoInfo)
-                .toList();
-    }
+        List<MedicoDto> mediciDto = new ArrayList<MedicoDto>();
 
-    private SpecializzazioneInfo toSpecializzazioneInfo(Specializzazione specializzazione) {
-        return new SpecializzazioneInfo(
-                specializzazione.getId(),
-                specializzazione.getNome()
-        );
-    }
-
-    private MedicoInfo toMedicoInfo(Medico medico) {
-        String nomeSpecializzazione = "";
-        Long idSpecializzazione = null;
-
-        if (medico.getSpecializzazione() != null) {
-            idSpecializzazione = medico.getSpecializzazione().getId();
-            nomeSpecializzazione = medico.getSpecializzazione().getNome();
+        for (Medico medico : medici) {
+            MedicoDto medicoDto = new MedicoDto(
+                    medico.getId(),
+                    medico.getNome(),
+                    medico.getCognome(),
+                    new SpecializzazioneDto(
+                            medico.getSpecializzazione().getId(),
+                            medico.getSpecializzazione().getNome()
+                    )
+            );
+            mediciDto.add(medicoDto);
         }
 
-        return new MedicoInfo(
-                medico.getId(),
-                medico.getNome(),
-                medico.getCognome(),
-                idSpecializzazione,
-                nomeSpecializzazione
-        );
-    }
-
-    public static class SpecializzazioneInfo {
-        private final Long id;
-        private final String nome;
-
-        public SpecializzazioneInfo(Long id, String nome) {
-            this.id = id;
-            this.nome = nome;
-        }
-
-        public Long getId() {
-            return id;
-        }
-
-        public String getNome() {
-            return nome;
-        }
-
-        @Override
-        public String toString() {
-            return nome;
-        }
-    }
-
-    public static class MedicoInfo {
-        private final Long id;
-        private final String nome;
-        private final String cognome;
-        private final Long idSpecializzazione;
-        private final String nomeSpecializzazione;
-
-        public MedicoInfo(Long id, String nome, String cognome, Long idSpecializzazione, String nomeSpecializzazione) {
-            this.id = id;
-            this.nome = nome;
-            this.cognome = cognome;
-            this.idSpecializzazione = idSpecializzazione;
-            this.nomeSpecializzazione = nomeSpecializzazione;
-        }
-
-        public Long getId() {
-            return id;
-        }
-
-        public String getNome() {
-            return nome;
-        }
-
-        public String getCognome() {
-            return cognome;
-        }
-
-        public Long getIdSpecializzazione() {
-            return idSpecializzazione;
-        }
-
-        public String getNomeSpecializzazione() {
-            return nomeSpecializzazione;
-        }
-
-        @Override
-        public String toString() {
-            return cognome + " " + nome + " - " + nomeSpecializzazione;
-        }
+        return mediciDto;
     }
 }

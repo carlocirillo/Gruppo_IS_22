@@ -142,6 +142,22 @@ public class GestorePersistenza {
         }
     }
 
+    public <T> List<T> cercaTutti(Class<T> classe) {
+
+        EntityManager em = JpaUtil.getInstance().getEntityManager();
+
+        try {
+            String jpql = "SELECT e FROM " + classe.getSimpleName() + " e";
+
+            TypedQuery<T> query = em.createQuery(jpql, classe);
+
+            return query.getResultList();
+
+        } finally {
+            em.close();
+        }
+    }
+
     /*
      * Cerca il primo oggetto persistente che soddisfa un insieme di condizioni.
      *
@@ -228,6 +244,24 @@ public class GestorePersistenza {
 
             return em.createQuery(jpql, Long.class).getSingleResult();
 
+        } finally {
+            em.close();
+        }
+    }
+
+
+    public <T> List<T> eseguiQueryCustom(Class<T> classe, String jpql, Map<String, Object> parametri) {
+        EntityManager em = JpaUtil.getInstance().getEntityManager();
+        try {
+            TypedQuery<T> query = em.createQuery(jpql, classe);
+
+            if (parametri != null) {
+                for (Map.Entry<String, Object> entry : parametri.entrySet()) {
+                    query.setParameter(entry.getKey(), entry.getValue());
+                }
+            }
+
+            return query.getResultList();
         } finally {
             em.close();
         }

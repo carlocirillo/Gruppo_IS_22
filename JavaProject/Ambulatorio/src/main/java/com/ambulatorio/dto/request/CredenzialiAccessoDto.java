@@ -1,4 +1,6 @@
 package com.ambulatorio.dto.request;
 
-public record CredenzialiAccessoDto() {
-}
+public record CredenzialiAccessoDto(
+        String email,
+        String password
+        ){}

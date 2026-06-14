@@ -1,84 +1,101 @@
 package com.ambulatorio.controller;
 
-import com.ambulatorio.DTO.response.StatisticheDto;
-import com.ambulatorio.boundary.AreaAmministratoreView;
 import com.ambulatorio.database.GestorePersistenza;
+import com.ambulatorio.dto.response.*;
+import com.ambulatorio.dto.response.StatisticheDto;
 import com.ambulatorio.entity.*;
 import com.ambulatorio.entity.enums.StatoPrenotazione;
+import com.ambulatorio.entity.enums.StatoFascia;
+import com.ambulatorio.entity.enums.TipoNotifica;
+import jakarta.persistence.EntityNotFoundException;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class PrenotazioneController {
-    private static PrenotazioneController instance;
     private final CalendarioController calendarioController;
     private final NotificaController notificaController;
-    private final GestorePersistenza gestorePersistenza = new GestorePersistenza();
+    private final GestorePersistenza gestorePersistenza;
 
-    private PrenotazioneController(CalendarioController calendarioController, NotificaController notificaController){
+    private PrenotazioneController(GestorePersistenza gestore, CalendarioController calendarioController, NotificaController notificaController){
         this.calendarioController = calendarioController;
         this.notificaController = notificaController;
+        this.gestorePersistenza = gestore;
     }
 
-    public static PrenotazioneController getInstance(){
-        if (instance == null){
-            instance = new PrenotazioneController(CalendarioController.getInstance(), NotificaController.getInstance());
-        }
-        return instance;
-    }
-
-    public boolean aggiornaStatoPrenotazione(long idPrenotazione, StatoPrenotazione nuovoStato, long idMedico) {
+    public void aggiornaStatoPrenotazione(long idMedico, long idPrenotazione, StatoPrenotazione nuovoStato) {
         // Validazione dello stato: deve essere EFFETTUATA o NON_PRESENTATO
         if (nuovoStato != StatoPrenotazione.EFFETTUATA && nuovoStato != StatoPrenotazione.NON_PRESENTATO) {
-            return false;
+            throw new IllegalArgumentException("Stato prenotazione non valido");
         }
 
-        try {
-            // Recupero della prenotazione dal database tramite ID
-            Prenotazione prenotazione = gestorePersistenza.trovaPerId(Prenotazione.class, idPrenotazione);
-
-            if (prenotazione != null) {
-                // Impostazione del nuovo stato
-                prenotazione.setStato(nuovoStato);
-                // Aggiornamento nel database richiamando aggiornaOggetto
-                gestorePersistenza.aggiorna(prenotazione);
-                return true;
-            }
-            return false;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+        Prenotazione prenotazione = gestorePersistenza.trovaPerId(Prenotazione.class, idPrenotazione);
+        if (prenotazione == null) {
+            throw new EntityNotFoundException("Impossibile trovare la prenotazione con ID: " + idPrenotazione);
         }
+
+        FasciaOraria fascia = prenotazione.getFasciaOraria();
+        if (fascia == null || fascia.getMedico() == null || fascia.getMedico().getId() != idMedico) {
+            throw new SecurityException("Il medico non è autorizzato a modificare questa prenotazione.");
+        }
+
+        prenotazione.setStato(nuovoStato);
+
+        gestorePersistenza.aggiorna(prenotazione);
     }
 
-    public java.util.List<com.ambulatorio.entity.Prenotazione> getPrenotazioniMedico(Long idMedico) {
-        com.ambulatorio.database.GestorePersistenza gestore = new com.ambulatorio.database.GestorePersistenza();
-        // Cerchiamo le prenotazioni filtrando per il medico della fascia oraria
-        return gestore.cercaPerCampo(com.ambulatorio.entity.Prenotazione.class, "fasciaOraria.medico.id", idMedico);
+    public List<PrenotazioneDto> getPrenotazioniMedico(Long idMedico) {
+        List<Prenotazione> prenotazioni = gestorePersistenza.cercaPerCampo(Prenotazione.class, "fasciaOraria.medico.id",  idMedico);
+
+        List<PrenotazioneDto> prenotazioniDto = new ArrayList<>();
+
+        for (Prenotazione pren : prenotazioni) {
+            PrenotazioneDto prenDto = new PrenotazioneDto(
+                    pren.getId(),
+                    new PazienteDto(
+                            pren.getPaziente().getId(),
+                            pren.getPaziente().getNome(),
+                            pren.getPaziente().getCognome(),
+                            pren.getPaziente().getCodiceFiscale(),
+                            pren.getPaziente().getNumeroCellulare()
+                    ),
+                    new MedicoDto(
+                            pren.getFasciaOraria().getMedico().getId(),
+                            pren.getFasciaOraria().getMedico().getNome(),
+                            pren.getFasciaOraria().getMedico().getCognome(),
+                            new SpecializzazioneDto(
+                                    pren.getFasciaOraria().getMedico().getSpecializzazione().getId(),
+                                    pren.getFasciaOraria().getMedico().getSpecializzazione().getNome()
+                            )
+                    ),
+                    new FasciaOrariaDto(
+                            pren.getFasciaOraria().getId(),
+                            pren.getFasciaOraria().getOraInizio(),
+                            pren.getFasciaOraria().getOraFine(),
+                            pren.getFasciaOraria().getData(),
+                            pren.getFasciaOraria().getStato()
+                    ),
+                    pren.getStato()
+            );
+            prenotazioniDto.add(prenDto);
+        }
+        return prenotazioniDto;
     }
 
     /*
-     * Metodo aggiunto per il caso d'uso PrenotaVisita.
+     * Metodo helper aggiunto per il caso d'uso PrenotaVisita.
      * Verifica se la fascia oraria selezionata esiste ed è libera.
      */
-    public boolean verificaDisponibilitaFascia(Long idFasciaOraria) {
+    private boolean verificaDisponibilitaFascia(Long idFasciaOraria) {
         try {
             if (idFasciaOraria == null) {
                 return false;
             }
 
-            com.ambulatorio.database.GestorePersistenza gestore =
-                    new com.ambulatorio.database.GestorePersistenza();
+            FasciaOraria fasciaOraria = gestorePersistenza.trovaPerId(FasciaOraria.class, idFasciaOraria);
 
-            com.ambulatorio.entity.FasciaOraria fasciaOraria =
-                    gestore.trovaPerId(com.ambulatorio.entity.FasciaOraria.class, idFasciaOraria);
-
-            return fasciaOraria != null &&
-                    fasciaOraria.getStato() == com.ambulatorio.entity.enums.StatoFascia.LIBERA;
+            return (fasciaOraria != null && fasciaOraria.getStato() == StatoFascia.LIBERA);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -91,91 +108,63 @@ public class PrenotazioneController {
      * Crea una prenotazione, associa paziente e fascia oraria,
      * cambia lo stato della fascia in OCCUPATA e genera una notifica.
      */
-    public boolean effettuaPrenotazione(Long idPaziente, Long idFasciaOraria) {
-        try {
-            if (idPaziente == null || idFasciaOraria == null) {
-                return false;
-            }
-
-            com.ambulatorio.database.GestorePersistenza gestore =
-                    new com.ambulatorio.database.GestorePersistenza();
-
-            com.ambulatorio.entity.Paziente paziente =
-                    gestore.trovaPerId(com.ambulatorio.entity.Paziente.class, idPaziente);
-
-            com.ambulatorio.entity.FasciaOraria fasciaOraria =
-                    gestore.trovaPerId(com.ambulatorio.entity.FasciaOraria.class, idFasciaOraria);
-
-            if (paziente == null || fasciaOraria == null) {
-                return false;
-            }
-
-            if (fasciaOraria.getStato() != com.ambulatorio.entity.enums.StatoFascia.LIBERA) {
-                return false;
-            }
-
-            com.ambulatorio.entity.Prenotazione prenotazione =
-                    new com.ambulatorio.entity.Prenotazione();
-
-            prenotazione.setPaziente(paziente);
-            prenotazione.setFasciaOraria(fasciaOraria);
-            prenotazione.setDataCreazione(LocalDate.now());
-            prenotazione.setStato(com.ambulatorio.entity.enums.StatoPrenotazione.PRENOTATA);
-
-            boolean prenotazioneSalvata = gestore.salva(prenotazione);
-
-            if (!prenotazioneSalvata) {
-                return false;
-            }
-
-            fasciaOraria.setStato(com.ambulatorio.entity.enums.StatoFascia.OCCUPATA);
-            gestore.aggiorna(fasciaOraria);
-
-            inviaNotificaConferma(prenotazione, gestore);
-
-            return true;
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+    public void effettuaPrenotazione(Long idPaziente, Long idFasciaOraria) {
+        if (idPaziente == null || idFasciaOraria == null) {
+            throw new IllegalArgumentException("Paziente o fascia oraria inesistente");
         }
+
+        Paziente paziente = gestorePersistenza.trovaPerId(Paziente.class, idPaziente);
+
+        if (!verificaDisponibilitaFascia(idFasciaOraria)) {
+            throw new IllegalArgumentException("La fascia oraria selezionata è già associata ad una prenotazione");
+        }
+
+        FasciaOraria fasciaOraria = gestorePersistenza.trovaPerId(FasciaOraria.class, idFasciaOraria);
+
+        Prenotazione prenotazione = new Prenotazione();
+        prenotazione.setPaziente(paziente);
+        prenotazione.setFasciaOraria(fasciaOraria);
+        prenotazione.setDataCreazione(LocalDate.now());
+        prenotazione.setStato(StatoPrenotazione.PRENOTATA);
+
+        if (!gestorePersistenza.salva(prenotazione)) {
+            throw new RuntimeException("Salvataggio della prenotazione nel database fallito");
+        }
+
+        fasciaOraria.setStato(StatoFascia.OCCUPATA);
+        gestorePersistenza.aggiorna(fasciaOraria);
+
+        inviaNotificaConferma(prenotazione);
+
     }
 
     /*
      * Metodo privato usato da effettuaPrenotazione.
      * Crea la notifica di conferma per il paziente.
      */
-    private void inviaNotificaConferma(
-            com.ambulatorio.entity.Prenotazione prenotazione,
-            com.ambulatorio.database.GestorePersistenza gestore
-    ) {
+
+    private void inviaNotificaConferma(Prenotazione prenotazione) {
         if (prenotazione == null || prenotazione.getPaziente() == null) {
             return;
         }
 
-        com.ambulatorio.entity.Notifica notifica =
-                new com.ambulatorio.entity.Notifica();
+        Notifica notifica = new Notifica();
 
         notifica.setDestinatario(prenotazione.getPaziente());
         notifica.setMessaggio("Prenotazione confermata.");
         notifica.setDataInvio(java.time.LocalDateTime.now());
 
-        /*
-         * Se questa riga dà errore, apri TipoNotifica.java
-         * e controlla il nome esatto del valore enum.
-         */
-        notifica.setTipo(com.ambulatorio.entity.enums.TipoNotifica.CONFERMA);
+        notifica.setTipo(TipoNotifica.CONFERMA);
 
-        gestore.salva(notifica);
+        gestorePersistenza.salva(notifica);
     }
 
     /*
      * Metodo aggiunto per recuperare le prenotazioni di un paziente.
      * Serve per lo storico prenotazioni del caso d'uso PrenotaVisita.
-     */
-    public java.util.List<com.ambulatorio.entity.Prenotazione> getPrenotazioniPaziente(Long idPaziente) {
-        com.ambulatorio.database.GestorePersistenza gestore =
-                new com.ambulatorio.database.GestorePersistenza();
+     *
+
+    public List<Prenotazione> getPrenotazioniPaziente(Long idPaziente) {
 
         return gestore.cercaPerCampo(
                 com.ambulatorio.entity.Prenotazione.class,
@@ -183,20 +172,41 @@ public class PrenotazioneController {
                 idPaziente
         );
     }
+    */
+
 
     public StatisticheDto calcolaReportStatistiche(LocalDate dataInizio, LocalDate dataFine){
 
-        StatisticheDto statisticheDto;
-        List<Prenotazione> listaPrenotazioni = gestorePersistenza.cercaPerCampi();
-        List<FasciaOraria> listaFasciaOraria = gestorePersistenza.cercaPerCampi();
+        String jpqlPrenotazioni = "SELECT p FROM Prenotazione p WHERE p.data BETWEEN :inizio AND :fine";
 
-        if(listaPrenotazioni.isEmpty() || listaFasciaOraria.isEmpty()){
+        Map<String, Object> parametri = new HashMap<>();
+        parametri.put("inizio", dataInizio);
+        parametri.put("fine", dataFine);
 
-            return statisticheDto = new StatisticheDto(Instant.now(), dataInizio, dataFine, Collections.emptyMap(),
-                    Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(),
-                    0, 0, 0);
-        }
+        List<Prenotazione> listaPrenotazioni = gestorePersistenza.eseguiQueryCustom(
+                Prenotazione.class,
+                jpqlPrenotazioni,
+                parametri
+        );
 
-        return statisticheDto ;
+        StatisticheDto statisticheDto = new StatisticheDto(
+                Instant.now(),
+                dataInizio,
+                dataFine,
+                Collections.emptyMap(),
+                Collections.emptyMap(),
+                Collections.emptyMap(),
+                Collections.emptyMap(),
+                0,
+                0,
+                0);
+
+        /* COSTRUISCI LE STATISTICHE
+        *
+        *
+        *
+         */
+
+        return statisticheDto;
     }
 }
