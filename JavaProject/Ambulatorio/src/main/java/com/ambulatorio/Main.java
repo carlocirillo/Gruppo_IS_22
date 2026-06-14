@@ -5,6 +5,7 @@ import com.ambulatorio.controller.AuthController;
 import com.ambulatorio.controller.MedicoController;
 import com.ambulatorio.controller.PrenotazioneController;
 import com.ambulatorio.database.GestorePersistenza;
+import com.ambulatorio.utils.InizializzatoreDatabase;
 
 import javax.swing.*;
 

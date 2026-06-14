@@ -1,4 +1,4 @@
-package com.ambulatorio;
+package com.ambulatorio.utils;
 
 import com.ambulatorio.database.GestorePersistenza;
 import com.ambulatorio.entity.*;
