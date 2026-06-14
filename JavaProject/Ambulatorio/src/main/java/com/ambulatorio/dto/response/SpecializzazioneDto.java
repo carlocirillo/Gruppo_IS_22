@@ -1,4 +1,4 @@
-package com.ambulatorio.DTO.response;
+package com.ambulatorio.dto.response;
 
 public record SpecializzazioneDto(
         Long id,

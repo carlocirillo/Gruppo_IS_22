@@ -1,4 +1,4 @@
-package com.ambulatorio.DTO.response;
+package com.ambulatorio.dto.response;
 
 import java.time.Instant;
 import java.time.LocalDate;

@@ -1,4 +1,4 @@
-package com.ambulatorio.DTO.response;
+package com.ambulatorio.dto.response;
 
 import com.ambulatorio.entity.enums.TipoNotifica;
 

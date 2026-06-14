@@ -1,8 +1,8 @@
 package com.ambulatorio.controller;
 
 import com.ambulatorio.database.GestorePersistenza;
-import com.ambulatorio.DTO.response.*;
-import com.ambulatorio.DTO.response.StatisticheDto;
+import com.ambulatorio.dto.response.*;
+import com.ambulatorio.dto.response.StatisticheDto;
 import com.ambulatorio.entity.*;
 import com.ambulatorio.entity.enums.StatoPrenotazione;
 import com.ambulatorio.entity.enums.StatoFascia;
