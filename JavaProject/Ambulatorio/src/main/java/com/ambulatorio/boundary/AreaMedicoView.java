@@ -23,6 +23,7 @@ public class AreaMedicoView {
     private JLabel lblTitolo;
     private JButton btnGiornoPrecedente;
     private JButton btnGiornoSuccessivo;
+    private JButton btnIndietro;
     private JLabel lblDataSelezionata;
 
     private final PrenotazioneController prenotazioneController;

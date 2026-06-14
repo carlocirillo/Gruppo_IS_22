@@ -25,7 +25,7 @@ public class SessioneUtente {
 
     public Long getIdUtente() {
         if (token == null) return null;
-        return Long.parseLong(JwtUtils.estraiRuolo(token));
+        return Long.parseLong(JwtUtils.estraiId(token));
     }
 
     public String getRuoloUtente() {
