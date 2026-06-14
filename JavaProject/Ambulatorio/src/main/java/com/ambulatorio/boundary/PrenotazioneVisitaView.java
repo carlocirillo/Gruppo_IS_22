@@ -25,7 +25,6 @@ import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 
-
 /**
  * Boundary del caso d'uso PrenotaVisita.
  *
@@ -41,9 +40,9 @@ public class PrenotazioneVisitaView extends JFrame {
     private JLabel lblMedico;
     private JLabel lblFasce;
     private JLabel lblRiepilogo;
-    private JComboBox<MedicoController.SpecializzazioneInfo> cmbSpecializzazioni;
-    private JComboBox<MedicoController.MedicoInfo> cmbMedici;
-    private JList<FasciaOrariaItem> listaFasce;
+    private JComboBox cmbSpecializzazioni;
+    private JComboBox cmbMedici;
+    private JList listaFasce;
     private JTextArea txtRiepilogo;
     private JButton btnAggiornaFasce;
     private JButton btnConferma;
@@ -135,7 +134,7 @@ public class PrenotazioneVisitaView extends JFrame {
     }
 
     public FasciaOrariaItem leggiFasciaSelezionata() {
-        return listaFasce.getSelectedValue();
+        return (FasciaOrariaItem) listaFasce.getSelectedValue();
     }
 
     public void mostraMessaggio(String messaggio) {
