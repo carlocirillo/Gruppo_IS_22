@@ -142,7 +142,7 @@ public class AreaMedicoView {
             StatoPrenotazione nuovoStato = (StatoPrenotazione) comboStato.getSelectedItem();
             
             try {
-                prenotazioneController.aggiornaStatoPrenotazione(idMedicoCorrente, p.id(), nuovoStato);
+                prenotazioneController.aggiornaStatoPrenotazione(idMedicoCorrente, nuovoStato);
                 JOptionPane.showMessageDialog(dialog, "Stato aggiornato!", "Successo", JOptionPane.INFORMATION_MESSAGE);
                 dialog.dispose();
                 aggiornaInterfaccia();

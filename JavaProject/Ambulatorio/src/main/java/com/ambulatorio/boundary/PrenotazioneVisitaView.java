@@ -282,10 +282,7 @@ public class PrenotazioneVisitaView extends JFrame {
                 return;
             }
 
-            prenotazioneController.effettuaPrenotazione(
-                    idPazienteAutenticato,
-                    fasciaSelezionata.id()
-            );
+            prenotazioneController.effettuaPrenotazione(fasciaSelezionata.id());
 
             mostraRiepilogoPrenotazioneConfermata(fasciaSelezionata);
             mostraMessaggio("Prenotazione registrata correttamente. È stata inviata una notifica di conferma.");

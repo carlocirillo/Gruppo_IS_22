@@ -45,12 +45,14 @@ public class Navigatore {
     }
 
     public void apriAreaPaziente() {
+        Long idPaziente = SessioneUtente.getInstance().getIdUtente();
         //RegistrazioneView view = new RegistrazioneView(this, authController);
         //cambiaSchermata(view.contentPane);
     }
 
     public void apriAreaMedico() {
-        AreaMedicoView view = new AreaMedicoView(prenotazioneController, 1); //TODO: cambiare l'1
+        Long idMedico = SessioneUtente.getInstance().getIdUtente();
+        AreaMedicoView view = new AreaMedicoView(prenotazioneController, idMedico);
         cambiaSchermata(view.contentPane);
     }
 

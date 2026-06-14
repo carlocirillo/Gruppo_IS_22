@@ -6,6 +6,7 @@ import com.ambulatorio.entity.FasciaOraria;
 import com.ambulatorio.entity.Medico;
 import com.ambulatorio.entity.Specializzazione;
 import com.ambulatorio.entity.enums.StatoFascia;
+import com.ambulatorio.utils.SessioneUtente;
 import jakarta.persistence.EntityNotFoundException;
 
 import java.time.LocalDate;

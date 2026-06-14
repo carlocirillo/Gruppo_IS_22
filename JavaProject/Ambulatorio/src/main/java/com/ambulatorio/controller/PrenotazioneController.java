@@ -7,6 +7,7 @@ import com.ambulatorio.entity.*;
 import com.ambulatorio.entity.enums.StatoPrenotazione;
 import com.ambulatorio.entity.enums.StatoFascia;
 import com.ambulatorio.entity.enums.TipoNotifica;
+import com.ambulatorio.utils.SessioneUtente;
 import jakarta.persistence.EntityNotFoundException;
 
 import java.time.Instant;
@@ -20,7 +21,9 @@ public class PrenotazioneController {
         this.gestorePersistenza = gestore;
     }
 
-    public void aggiornaStatoPrenotazione(long idMedico, long idPrenotazione, StatoPrenotazione nuovoStato) {
+    // RICHIEDE MEDICO AUTENTICATO
+    public void aggiornaStatoPrenotazione(long idPrenotazione, StatoPrenotazione nuovoStato) {
+        Long idMedico = SessioneUtente.getInstance().getIdUtente();
         // Validazione dello stato: deve essere EFFETTUATA o NON_PRESENTATO
         if (nuovoStato != StatoPrenotazione.EFFETTUATA && nuovoStato != StatoPrenotazione.NON_PRESENTATO) {
             throw new IllegalArgumentException("Stato prenotazione non valido");
@@ -85,7 +88,9 @@ public class PrenotazioneController {
      * Crea una prenotazione, associa paziente e fascia oraria,
      * cambia lo stato della fascia in OCCUPATA e genera una notifica.
      */
-    public void effettuaPrenotazione(Long idPaziente, Long idFasciaOraria) {
+    // RICHIEDE PAZIENTE AUTENTICATO
+    public void effettuaPrenotazione(Long idFasciaOraria) {
+        Long idPaziente = SessioneUtente.getInstance().getIdUtente();
         // 1. Validazione input base
         if (idPaziente == null || idFasciaOraria == null) {
             throw new IllegalArgumentException("I parametri Paziente e Fascia Oraria non possono essere nulli");

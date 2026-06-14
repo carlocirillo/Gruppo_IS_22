@@ -27,5 +27,11 @@ public class RegistrazioneView {
                 navigatore.apriMainPage();
             }
         });
+        registratiButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
     }
 }

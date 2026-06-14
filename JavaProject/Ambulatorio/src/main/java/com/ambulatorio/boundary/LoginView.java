@@ -5,6 +5,7 @@ import com.ambulatorio.dto.request.CredenzialiAccessoDto;
 import com.ambulatorio.exceptions.CredenzialiNonValideException;
 import com.ambulatorio.utils.JwtUtils;
 import com.ambulatorio.utils.Navigatore;
+import com.ambulatorio.utils.SessioneUtente;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -46,8 +47,14 @@ public class LoginView {
 
                 try {
                     String token =  authController.login(dati);
+
+                    SessioneUtente.getInstance().setToken(token);
+
                     JOptionPane.showMessageDialog(contentPane, "Login effettuato con successo!");
-                    switch (JwtUtils.estraiRuolo(token).toUpperCase()) {
+
+                    String ruolo = SessioneUtente.getInstance().getRuoloUtente();
+
+                    switch (ruolo.toUpperCase()) {
                         case "PAZIENTE":
                             navigatore.apriAreaPaziente();
                             break;

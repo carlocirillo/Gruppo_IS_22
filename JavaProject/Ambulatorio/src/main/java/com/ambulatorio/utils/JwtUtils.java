@@ -48,6 +48,16 @@ public class JwtUtils {
                 .compact();
     }
 
+    public static String estraiId(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.getSubject();
+    }
+
     public static String estraiRuolo(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(getSigningKey())
