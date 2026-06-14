@@ -15,11 +15,6 @@ import java.time.format.DateTimeFormatter;
 @Getter
 @Setter
 public class FasciaOraria {
-    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-    @Override
-    public String toString() {
-        return oraInizio.format(formatter) + " - " + oraFine.format(formatter);
-    }
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,4 +30,11 @@ public class FasciaOraria {
     @ManyToOne
     @JoinColumn(name = "medico_id")
     private Medico medico;
+
+    private static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+
+    @Override
+    public String toString() {
+        return oraInizio.format(formatter) + " - " + oraFine.format(formatter);
+    }
 }

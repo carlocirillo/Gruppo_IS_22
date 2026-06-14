@@ -14,13 +14,9 @@ import java.time.LocalDate;
 import java.util.*;
 
 public class PrenotazioneController {
-    private final CalendarioController calendarioController;
-    private final NotificaController notificaController;
     private final GestorePersistenza gestorePersistenza;
 
-    private PrenotazioneController(GestorePersistenza gestore, CalendarioController calendarioController, NotificaController notificaController){
-        this.calendarioController = calendarioController;
-        this.notificaController = notificaController;
+    public PrenotazioneController(GestorePersistenza gestore){
         this.gestorePersistenza = gestore;
     }
 
@@ -83,25 +79,6 @@ public class PrenotazioneController {
         return prenotazioniDto;
     }
 
-    /*
-     * Metodo helper aggiunto per il caso d'uso PrenotaVisita.
-     * Verifica se la fascia oraria selezionata esiste ed è libera.
-     */
-    private boolean verificaDisponibilitaFascia(Long idFasciaOraria) {
-        try {
-            if (idFasciaOraria == null) {
-                return false;
-            }
-
-            FasciaOraria fasciaOraria = gestorePersistenza.trovaPerId(FasciaOraria.class, idFasciaOraria);
-
-            return (fasciaOraria != null && fasciaOraria.getStato() == StatoFascia.LIBERA);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
 
     /*
      * Metodo principale del caso d'uso PrenotaVisita.
@@ -109,17 +86,29 @@ public class PrenotazioneController {
      * cambia lo stato della fascia in OCCUPATA e genera una notifica.
      */
     public void effettuaPrenotazione(Long idPaziente, Long idFasciaOraria) {
+        // 1. Validazione input base
         if (idPaziente == null || idFasciaOraria == null) {
-            throw new IllegalArgumentException("Paziente o fascia oraria inesistente");
+            throw new IllegalArgumentException("I parametri Paziente e Fascia Oraria non possono essere nulli");
         }
 
+        // 2. Recupero entità e validazione
         Paziente paziente = gestorePersistenza.trovaPerId(Paziente.class, idPaziente);
-
-        if (!verificaDisponibilitaFascia(idFasciaOraria)) {
-            throw new IllegalArgumentException("La fascia oraria selezionata è già associata ad una prenotazione");
+        if (paziente == null) {
+            throw new EntityNotFoundException("Nessun paziente trovato con ID: " + idPaziente);
         }
 
         FasciaOraria fasciaOraria = gestorePersistenza.trovaPerId(FasciaOraria.class, idFasciaOraria);
+        if (fasciaOraria == null) {
+            throw new EntityNotFoundException("Nessuna fascia oraria trovata con ID: " + idFasciaOraria);
+        }
+
+        // 3. Validazione regole di business
+        if (fasciaOraria.getStato() != StatoFascia.LIBERA) {
+            throw new IllegalStateException("La fascia oraria selezionata non è più disponibile");
+        }
+
+        // 4. Preparazione modifiche in memoria
+        fasciaOraria.setStato(StatoFascia.OCCUPATA);
 
         Prenotazione prenotazione = new Prenotazione();
         prenotazione.setPaziente(paziente);
@@ -127,33 +116,29 @@ public class PrenotazioneController {
         prenotazione.setDataCreazione(LocalDate.now());
         prenotazione.setStato(StatoPrenotazione.PRENOTATA);
 
+        // 5. Esecuzione operazioni su DB
+        gestorePersistenza.aggiorna(fasciaOraria);
         if (!gestorePersistenza.salva(prenotazione)) {
-            throw new RuntimeException("Salvataggio della prenotazione nel database fallito");
+            throw new RuntimeException("Errore durante il salvataggio della prenotazione");
         }
 
-        fasciaOraria.setStato(StatoFascia.OCCUPATA);
-        gestorePersistenza.aggiorna(fasciaOraria);
-
+        // 6. Invio notifica
         inviaNotificaConferma(prenotazione);
-
     }
 
     /*
      * Metodo privato usato da effettuaPrenotazione.
      * Crea la notifica di conferma per il paziente.
      */
-
     private void inviaNotificaConferma(Prenotazione prenotazione) {
         if (prenotazione == null || prenotazione.getPaziente() == null) {
             return;
         }
 
         Notifica notifica = new Notifica();
-
         notifica.setDestinatario(prenotazione.getPaziente());
         notifica.setMessaggio("Prenotazione confermata.");
         notifica.setDataInvio(java.time.LocalDateTime.now());
-
         notifica.setTipo(TipoNotifica.CONFERMA);
 
         gestorePersistenza.salva(notifica);

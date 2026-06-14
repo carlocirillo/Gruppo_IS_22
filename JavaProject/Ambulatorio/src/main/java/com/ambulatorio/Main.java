@@ -1,14 +1,10 @@
 package com.ambulatorio;
 
-import com.ambulatorio.boundary.AreaAmministratoreView;
-import com.ambulatorio.boundary.AreaMedicoView;
 import com.ambulatorio.boundary.MainPage;
 import com.ambulatorio.controller.AuthController;
-import com.ambulatorio.controller.CalendarioController;
 import com.ambulatorio.controller.MedicoController;
 import com.ambulatorio.controller.PrenotazioneController;
 import com.ambulatorio.database.GestorePersistenza;
-import com.ambulatorio.database.JpaUtil;
 
 import javax.swing.*;
 
