@@ -25,19 +25,10 @@ public class PrenotazioneController {
     // RICHIEDE MEDICO AUTENTICATO
     public void aggiornaStatoPrenotazione(long idPrenotazione, StatoPrenotazione nuovoStato) {
         Long idMedico = SessioneUtente.getInstance().getIdUtente();
-        // Validazione dello stato: deve essere EFFETTUATA o NON_PRESENTATO
-        if (nuovoStato != StatoPrenotazione.EFFETTUATA && nuovoStato != StatoPrenotazione.NON_PRESENTATO) {
-            throw new IllegalArgumentException("Stato prenotazione non valido");
-        }
 
         Prenotazione prenotazione = gestorePersistenza.trovaPerId(Prenotazione.class, idPrenotazione);
         if (prenotazione == null) {
             throw new EntityNotFoundException("Impossibile trovare la prenotazione con ID: " + idPrenotazione);
-        }
-
-        FasciaOraria fascia = prenotazione.getFasciaOraria();
-        if (fascia == null || fascia.getMedico() == null || fascia.getMedico().getId() != idMedico) {
-            throw new SecurityException("Il medico non è autorizzato a modificare questa prenotazione.");
         }
 
         prenotazione.setStato(nuovoStato);
