@@ -37,6 +37,7 @@ public class AreaPersonalePazienteView {
     private JScrollPane scrollStorico;
 
     private static final DateTimeFormatter DATA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter ORA_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private final Navigatore navigatore;
     private final MedicoController medicoController;
@@ -193,7 +194,8 @@ public class AreaPersonalePazienteView {
             return "-";
         }
 
-        return prenotazione.fasciaOraria().orainizio() + " - " + prenotazione.fasciaOraria().oraFine();
+        return prenotazione.fasciaOraria().orainizio().format(ORA_FORMATTER) + " - " +
+                prenotazione.fasciaOraria().oraFine().format(ORA_FORMATTER);
     }
 
     private String formattaMedico(PrenotazioneDto prenotazione) {

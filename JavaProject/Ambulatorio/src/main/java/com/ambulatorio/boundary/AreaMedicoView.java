@@ -81,10 +81,13 @@ public class AreaMedicoView {
     }
 
     private void aggiornaInterfaccia() {
+        DateTimeFormatter ORA_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+
         // Aggiorna la label della data
         lblDataSelezionata.setText(dataVisualizzata.format(DATA_FORMATTER));
 
         // Recupero prenotazioni dal Controller
+        System.out.println("idMedicoCorrente = " + idMedicoCorrente);
         List<PrenotazioneDto> tutteLePrenotazioni = prenotazioneController.getPrenotazioniMedico(idMedicoCorrente);
 
         // Filtraggio per la data correntemente visualizzata e ordinamento per orario
@@ -99,7 +102,7 @@ public class AreaMedicoView {
 
         for (PrenotazioneDto p : prenotazioniVisualizzate) {
             Object[] row = {
-                    p.fasciaOraria().orainizio() + " - " + p.fasciaOraria().oraFine(),
+                    p.fasciaOraria().orainizio().format(ORA_FORMATTER) + " - " + p.fasciaOraria().oraFine().format(ORA_FORMATTER),
                     p.paziente().nome() + " " + p.paziente().cognome(),
                     p.stato()
             };

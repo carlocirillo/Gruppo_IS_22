@@ -46,6 +46,7 @@ public class PrenotazioneVisitaView extends JFrame {
 
     private static final int MESI_DA_VISUALIZZARE = 3;
     private static final DateTimeFormatter DATA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter ORA_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private DefaultListModel<FasciaOrariaDto> modelloFasce;
 
@@ -374,7 +375,7 @@ public class PrenotazioneVisitaView extends JFrame {
                         + "Paziente ID: " + idPazienteAutenticato + "\n"
                         + "Medico: " + nomeMedico + "\n"
                         + "Data visita: " + formattaData(fascia.data()) + "\n"
-                        + "Orario: " + fascia.orainizio() + " - " + fascia.oraFine() + "\n"
+                        + "Orario: " + fascia.orainizio().format(ORA_FORMATTER) + " - " + fascia.oraFine().format(ORA_FORMATTER) + "\n"
                         + "Stato fascia: " + fascia.stato()
         );
     }
@@ -388,7 +389,7 @@ public class PrenotazioneVisitaView extends JFrame {
                         + "Paziente ID: " + idPazienteAutenticato + "\n"
                         + "Medico: " + nomeMedico + "\n"
                         + "Data visita: " + formattaData(fascia.data()) + "\n"
-                        + "Orario: " + fascia.orainizio() + " - " + fascia.oraFine() + "\n"
+                        + "Orario: " + fascia.orainizio().format(ORA_FORMATTER) + " - " + fascia.oraFine().format(ORA_FORMATTER) + "\n"
                         + "Stato prenotazione: PRENOTATA"
         );
     }
@@ -406,7 +407,9 @@ public class PrenotazioneVisitaView extends JFrame {
             return "";
         }
 
-        return formattaData(fascia.data()) + " | " + fascia.orainizio() + " - " + fascia.oraFine();
+        return formattaData(fascia.data()) + " | " +
+                fascia.orainizio().format(ORA_FORMATTER) + " - " +
+                fascia.oraFine().format(ORA_FORMATTER);
     }
 
     private String formattaData(LocalDate data) {

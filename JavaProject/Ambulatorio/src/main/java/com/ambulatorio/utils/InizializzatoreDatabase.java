@@ -99,7 +99,7 @@ public class InizializzatoreDatabase {
         Medico medico1 = gestore.cercaPerCampo(Medico.class, "email", "mario.rossi@gmail.com").getFirst();
         f1.setMedico(medico1);
         f1.setData(LocalDate.now());
-        f1.setOraInizio(LocalTime.now().minusHours(2).withMinute(0).withSecond(0));
+        f1.setOraInizio(LocalTime.now().minusHours(2).withMinute(0).withSecond(0).withNano(0));
         f1.setOraFine(f1.getOraInizio().plusMinutes(30));
         f1.setStato(StatoFascia.OCCUPATA);
         gestore.salva(f1);
@@ -116,7 +116,7 @@ public class InizializzatoreDatabase {
         FasciaOraria f2 = new FasciaOraria();
         f2.setMedico(medico1);
         f2.setData(LocalDate.now().plusDays(1));
-        f2.setOraInizio(LocalTime.of(10, 0));
+        f2.setOraInizio(LocalTime.now().plusHours(1).withMinute(0).withSecond(0).withNano(0));
         f2.setOraFine(LocalTime.of(10, 30));
         f2.setStato(StatoFascia.OCCUPATA);
         gestore.salva(f2);
