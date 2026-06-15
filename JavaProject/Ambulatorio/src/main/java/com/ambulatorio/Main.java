@@ -37,7 +37,7 @@ public class Main {
         Navigatore navigatore = new Navigatore(frame, authController, calendarioController, medicoController, prenotazioneController);
 
         frame.setTitle("Ambulatorio");
-        frame.setContentPane(new AreaAmministratoreView(navigatore).contentPane);
+        frame.setContentPane(new MainPage(navigatore).contentPane);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setResizable(false);

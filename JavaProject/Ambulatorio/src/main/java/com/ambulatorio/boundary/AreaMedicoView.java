@@ -3,6 +3,7 @@ package com.ambulatorio.boundary;
 import com.ambulatorio.controller.PrenotazioneController;
 import com.ambulatorio.dto.response.PrenotazioneDto;
 import com.ambulatorio.entity.enums.StatoPrenotazione;
+import com.ambulatorio.exceptions.PersistenzaException;
 import com.ambulatorio.utils.Navigatore;
 import com.ambulatorio.utils.SessioneUtente;
 
@@ -159,9 +160,12 @@ public class AreaMedicoView {
                 dialog.dispose();
                 tblAgenda.clearSelection(); // Rimuove la selezione dopo la modifica
                 aggiornaInterfaccia();
+            } catch (PersistenzaException ex) {
+                // Messaggio specifico richiesto dal Sequence Diagram per errore di persistenza
+                JOptionPane.showMessageDialog(dialog, "Errore di salvataggio, riprovare", "Errore", JOptionPane.ERROR_MESSAGE);
             } catch (Exception ex) {
-                // Mostriamo l'errore effettivo restituito dal controller per facilitare il debug
-                JOptionPane.showMessageDialog(dialog, "Errore: " + ex.getMessage(), "Errore", JOptionPane.ERROR_MESSAGE);
+                // Altri errori generici
+                JOptionPane.showMessageDialog(dialog, "Errore di salvataggio, riprovare", "Errore", JOptionPane.ERROR_MESSAGE);
             }
         });
 
