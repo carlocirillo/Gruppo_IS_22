@@ -203,7 +203,7 @@ public class PrenotazioneController {
 
     public StatisticheDto calcolaReportStatistiche(LocalDate dataInizio, LocalDate dataFine){
 
-        String jpqlPrenotazioni = "SELECT p FROM Prenotazione p WHERE p.data BETWEEN :inizio AND :fine";
+        String jpqlPrenotazioni = "SELECT p FROM Prenotazione p WHERE p.dataPrenotazione BETWEEN :inizio AND :fine";
 
         Map<String, Object> parametri = new HashMap<>();
         parametri.put("inizio", dataInizio);

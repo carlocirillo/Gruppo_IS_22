@@ -76,7 +76,7 @@
                 </constraints>
                 <properties>
                   <font name="Segoe UI" style="1"/>
-                  <text value="Data Inizio:"/>
+                  <text value="Data inizio (GG/MM/AA):"/>
                 </properties>
               </component>
               <component id="a889c" class="javax.swing.JTextField" binding="dataInizioTxt">
@@ -95,7 +95,7 @@
                 </constraints>
                 <properties>
                   <font name="Segoe UI" style="1"/>
-                  <text value="Data Fine:"/>
+                  <text value="Data fine (GG/MM/AA):"/>
                 </properties>
               </component>
               <component id="43ecd" class="javax.swing.JTextField" binding="dataFineTxt">
