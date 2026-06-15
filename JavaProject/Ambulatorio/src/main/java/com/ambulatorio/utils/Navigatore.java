@@ -57,7 +57,7 @@ public class Navigatore {
     }
 
     public void apriAreaPrenotaVisita() {
-        PrenotazioneVisitaView view = new PrenotazioneVisitaView(medicoController, calendarioController, prenotazioneController);
+        PrenotazioneVisitaView view = new PrenotazioneVisitaView(this, medicoController, calendarioController, prenotazioneController);
         cambiaSchermata(view.contentPane);
     }
 
