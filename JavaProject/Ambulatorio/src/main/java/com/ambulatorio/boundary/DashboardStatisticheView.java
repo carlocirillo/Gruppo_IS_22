@@ -80,6 +80,8 @@ public class DashboardStatisticheView {
         String testoFine = dataFineTxt.getText().trim();
         LocalDate dataCreazioneAmbulatorio = LocalDate.of(2015, 10, 10);
 
+        elaborazionePanel.setVisible(false);
+
         String erroreInizio = isDataValida(testoInizio);
         if(erroreInizio != null){
 
