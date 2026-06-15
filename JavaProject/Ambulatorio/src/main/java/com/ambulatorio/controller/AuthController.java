@@ -11,10 +11,14 @@ import com.ambulatorio.exceptions.UtenteGiaRegistratoException;
 import com.ambulatorio.utils.JwtUtils;
 import com.ambulatorio.utils.PasswordUtils;
 
+
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class AuthController {
     private final GestorePersistenza gestorePersistenza;
+    private static final String EMAIL_REGEX = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
 
     public AuthController(GestorePersistenza gestore) {
         this.gestorePersistenza = gestore;
@@ -56,6 +60,10 @@ public class AuthController {
 
         if (dati == null || dati.email() == null || dati.password() == null) {
             throw new IllegalArgumentException("Email e password sono obbligatorie");
+        }
+
+        if (!EMAIL_PATTERN.matcher(dati.email()).matches()) {
+            throw new IllegalArgumentException("Formato email non valido");
         }
 
         List<Utente> utenti = gestorePersistenza.cercaPerCampo(Utente.class,"email", dati.email());
