@@ -7,6 +7,7 @@ import com.ambulatorio.entity.*;
 import com.ambulatorio.entity.enums.StatoPrenotazione;
 import com.ambulatorio.entity.enums.StatoFascia;
 import com.ambulatorio.entity.enums.TipoNotifica;
+import com.ambulatorio.exceptions.PersistenzaException;
 import com.ambulatorio.utils.SessioneUtente;
 import jakarta.persistence.EntityNotFoundException;
 
@@ -41,7 +42,12 @@ public class PrenotazioneController {
 
         prenotazione.setStato(nuovoStato);
 
-        gestorePersistenza.aggiorna(prenotazione);
+        try {
+            gestorePersistenza.aggiorna(prenotazione);
+        } catch (Exception e) {
+            // Se si verifica un errore di persistenza (es. DB spento), lanciamo l'eccezione custom
+            throw new PersistenzaException("Errore durante l'aggiornamento della prenotazione nel database.");
+        }
     }
 
     public List<PrenotazioneDto> getPrenotazioniMedico(Long idMedico) {
@@ -197,7 +203,7 @@ public class PrenotazioneController {
 
     public StatisticheDto calcolaReportStatistiche(LocalDate dataInizio, LocalDate dataFine){
 
-        String jpqlPrenotazioni = "SELECT p FROM Prenotazione p WHERE p.data BETWEEN :inizio AND :fine";
+        String jpqlPrenotazioni = "SELECT p FROM Prenotazione p WHERE p.dataPrenotazione BETWEEN :inizio AND :fine";
 
         Map<String, Object> parametri = new HashMap<>();
         parametri.put("inizio", dataInizio);

@@ -119,7 +119,7 @@
             <properties>
               <background color="-12211457"/>
               <font style="1"/>
-              <foreground color="-16777216"/>
+              <foreground color="-1"/>
               <text value="Accedi"/>
             </properties>
           </component>

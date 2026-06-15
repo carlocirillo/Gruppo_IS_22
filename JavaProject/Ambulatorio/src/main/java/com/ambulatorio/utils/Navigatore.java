@@ -57,7 +57,7 @@ public class Navigatore {
     }
 
     public void apriAreaPrenotaVisita() {
-        PrenotazioneVisitaView view = new PrenotazioneVisitaView(medicoController, calendarioController, prenotazioneController);
+        PrenotazioneVisitaView view = new PrenotazioneVisitaView(this, medicoController, calendarioController, prenotazioneController);
         cambiaSchermata(view.contentPane);
     }
 
@@ -67,7 +67,12 @@ public class Navigatore {
     }
 
     public void apriAreaAmministratore() {
-        AreaAmministratoreView view = new AreaAmministratoreView(prenotazioneController);
+        AreaAmministratoreView view = new AreaAmministratoreView(this);
+        cambiaSchermata(view.contentPane);
+    }
+
+    public void apriDashboardStatistiche() {
+        DashboardStatisticheView view = new DashboardStatisticheView(this, prenotazioneController);
         cambiaSchermata(view.contentPane);
     }
 

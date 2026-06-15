@@ -1,5 +1,7 @@
 package com.ambulatorio;
 
+import com.ambulatorio.boundary.AreaAmministratoreView;
+import com.ambulatorio.boundary.DashboardStatisticheView;
 import com.ambulatorio.boundary.MainPage;
 import com.ambulatorio.controller.AuthController;
 import com.ambulatorio.controller.CalendarioController;

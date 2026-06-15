@@ -130,7 +130,7 @@
             <properties>
               <font name="Segoe UI" style="1"/>
               <foreground color="-4515545"/>
-              <text value="Indietro"/>
+              <text value="Esci"/>
             </properties>
           </component>
         </children>

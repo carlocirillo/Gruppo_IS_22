@@ -108,6 +108,7 @@ public class InizializzatoreDatabase {
         pren1.setPaziente(paziente1);
         pren1.setFasciaOraria(f1);
         pren1.setDataCreazione(LocalDate.now().minusDays(1));
+        pren1.setDataPrenotazione(f1.getData());
         pren1.setStato(StatoPrenotazione.PRENOTATA);
         gestore.salva(pren1);
 
@@ -124,6 +125,7 @@ public class InizializzatoreDatabase {
         pren2.setPaziente(paziente2);
         pren2.setFasciaOraria(f2);
         pren2.setDataCreazione(LocalDate.now().minusDays(2));
+        pren2.setDataPrenotazione(f2.getData());
         pren2.setStato(StatoPrenotazione.PRENOTATA);
         gestore.salva(pren2);
 

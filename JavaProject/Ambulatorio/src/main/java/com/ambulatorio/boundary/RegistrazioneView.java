@@ -52,4 +52,9 @@ public class RegistrazioneView {
             }
         );
     }
+
+    static void main() {
+
+
+    }
 }
