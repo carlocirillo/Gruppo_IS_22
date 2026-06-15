@@ -115,9 +115,16 @@ public class AreaMedicoView {
         }
 
         PrenotazioneDto p = prenotazioniVisualizzate.get(selectedRow);
+
+        // BLOCCO STATI FINALI: Se la visita è già stata gestita, ignoriamo il click
+        if (p.stato() == StatoPrenotazione.EFFETTUATA || p.stato() == StatoPrenotazione.NON_PRESENTATO) {
+            tblAgenda.clearSelection();
+            return;
+        }
+
         LocalDateTime oraInizioVisita = LocalDateTime.of(p.fasciaOraria().data(), p.fasciaOraria().orainizio());
 
-        // Se la fascia oraria è già passata, apri il pop-up modale
+        // Se lo stato è PRENOTATA e la fascia oraria è già passata, apri il pop-up modale
         if (oraInizioVisita.isBefore(LocalDateTime.now())) {
             mostraPopUpAggiornamento(p);
         } else {
