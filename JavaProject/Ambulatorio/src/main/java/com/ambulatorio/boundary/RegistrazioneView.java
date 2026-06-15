@@ -1,11 +1,15 @@
 package com.ambulatorio.boundary;
 
 import com.ambulatorio.controller.AuthController;
+import com.ambulatorio.dto.request.NuovoPazienteDto;
+import com.ambulatorio.exceptions.CredenzialiNonValideException;
+import com.ambulatorio.exceptions.UtenteGiaRegistratoException;
 import com.ambulatorio.utils.Navigatore;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
 
 public class RegistrazioneView {
     public JPanel contentPane;
@@ -30,8 +34,22 @@ public class RegistrazioneView {
         registratiButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                NuovoPazienteDto nuovoPazienteDto = new NuovoPazienteDto(
+                        textField1.getText(),
+                        textField2.getText(),
+                        textField3.getText(),
+                        Arrays.toString(passwordField1.getPassword()),
+                        textField5.getText(),
+                        textField4.getText()
+                );
+                try {
+                    authController.registrazionePaziente(nuovoPazienteDto);
+                    navigatore.apriMainPage();
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(contentPane,ex.getMessage(), "Errore di registrazione", JOptionPane.ERROR_MESSAGE);
+                }
+                }
             }
-        });
+        );
     }
 }

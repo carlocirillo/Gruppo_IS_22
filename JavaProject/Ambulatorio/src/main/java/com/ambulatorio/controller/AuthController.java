@@ -26,7 +26,9 @@ public class AuthController {
             throw new IllegalArgumentException("Dati paziente incompleti");
         }
 
-        List<Paziente> esistenti = gestorePersistenza.cercaPerCampo(Paziente.class, "email",  datiPaziente.email());
+        String email = datiPaziente.email().trim().toLowerCase();
+
+        List<Paziente> esistenti = gestorePersistenza.cercaPerCampo(Paziente.class, "email",  email);
 
         if (!esistenti.isEmpty()) {
             throw new UtenteGiaRegistratoException("Esiste già un account con questa email.");
@@ -37,9 +39,11 @@ public class AuthController {
         Paziente nuovoPaziente = new Paziente();
         nuovoPaziente.setNome(datiPaziente.nome());
         nuovoPaziente.setCognome(datiPaziente.cognome());
-        nuovoPaziente.setEmail(datiPaziente.email());
+        nuovoPaziente.setEmail(email);
         nuovoPaziente.setPasswordHash(passwordHash);
         nuovoPaziente.setRuolo(Ruolo.PAZIENTE);
+        nuovoPaziente.setCodiceFiscale(datiPaziente.codiceFiscale());
+        nuovoPaziente.setNumeroCellulare(datiPaziente.numeroCellulare());
 
         if (!gestorePersistenza.salva(nuovoPaziente)) {
             throw new RuntimeException("Errore interno durante il salvataggio del paziente.");

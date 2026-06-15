@@ -32,7 +32,7 @@ public class LoginView {
         accediButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String email =  textField1.getText();
+                String email =  textField1.getText().trim().toLowerCase();
                 String password = new String(passwordField1.getPassword());
 
                 if (email.trim().isEmpty() || password.isEmpty()) {
