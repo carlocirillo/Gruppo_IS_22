@@ -6,7 +6,6 @@ import com.ambulatorio.controller.PrenotazioneController;
 import com.ambulatorio.dto.response.FasciaOrariaDto;
 import com.ambulatorio.dto.response.MedicoDto;
 import com.ambulatorio.dto.response.SpecializzazioneDto;
-import com.ambulatorio.entity.enums.StatoFascia;
 import com.ambulatorio.utils.SessioneUtente;
 
 import javax.swing.DefaultComboBoxModel;
@@ -26,6 +25,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
+import com.ambulatorio.utils.Navigatore;
 
 
 public class PrenotazioneVisitaView extends JFrame {
@@ -42,6 +42,7 @@ public class PrenotazioneVisitaView extends JFrame {
     private JTextArea txtRiepilogo;
     private JButton btnAggiornaFasce;
     private JButton btnConferma;
+    private JButton btnIndietro;
 
     private static final int MESI_DA_VISUALIZZARE = 3;
     private static final DateTimeFormatter DATA_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -52,12 +53,16 @@ public class PrenotazioneVisitaView extends JFrame {
     private final CalendarioController calendarioController;
     private final PrenotazioneController prenotazioneController;
     private final Long idPazienteAutenticato;
+    private final Navigatore navigatore;
 
     public PrenotazioneVisitaView(
+            Navigatore navigatore,
             MedicoController medicoController,
             CalendarioController calendarioController,
             PrenotazioneController prenotazioneController
+
     ) {
+        this.navigatore = Objects.requireNonNull(navigatore, "Il Navigatore non può essere null");
         this.medicoController = Objects.requireNonNull(medicoController, "Il MedicoController non può essere null");
         this.calendarioController = Objects.requireNonNull(calendarioController, "Il CalendarioController non può essere null");
         this.prenotazioneController = Objects.requireNonNull(prenotazioneController, "Il PrenotazioneController non può essere null");
@@ -170,6 +175,7 @@ public class PrenotazioneVisitaView extends JFrame {
         cmbMedici.addActionListener(e -> caricaFasceDisponibiliPerMedico());
         btnAggiornaFasce.addActionListener(e -> caricaFasceDisponibiliPerMedico());
         btnConferma.addActionListener(e -> confermaPrenotazione());
+        btnIndietro.addActionListener(e -> navigatore.apriAreaPaziente());
 
         listaFasce.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
@@ -272,24 +278,17 @@ public class PrenotazioneVisitaView extends JFrame {
         }
 
         try {
-            StatoFascia statoCorrente = calendarioController.verificaDisponibilitaFascia(
-                    fasciaSelezionata.id()
-            );
-
-            if (statoCorrente != StatoFascia.LIBERA) {
-                mostraMessaggio("La fascia oraria selezionata non è più disponibile. Scegli una nuova fascia.");
-                caricaFasceDisponibiliPerMedico();
-                return;
-            }
-
+            /*
+             * La verifica definitiva della disponibilità resta nel PrenotazioneController.
+             * Se la fascia non è più libera, effettuaPrenotazione(...) lancerà eccezione.
+             */
             prenotazioneController.effettuaPrenotazione(fasciaSelezionata.id());
 
             mostraRiepilogoPrenotazioneConfermata(fasciaSelezionata);
             mostraMessaggio("Prenotazione registrata correttamente. È stata inviata una notifica di conferma.");
-            caricaFasceDisponibiliPerMedico();
+            navigatore.apriAreaPaziente();
         } catch (RuntimeException ex) {
             mostraErrore("Prenotazione non completata", ex);
-            caricaFasceDisponibiliPerMedico();
         }
     }
 
