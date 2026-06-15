@@ -2,8 +2,6 @@ package com.ambulatorio.boundary;
 
 import com.ambulatorio.controller.AuthController;
 import com.ambulatorio.dto.request.NuovoPazienteDto;
-import com.ambulatorio.exceptions.CredenzialiNonValideException;
-import com.ambulatorio.exceptions.UtenteGiaRegistratoException;
 import com.ambulatorio.utils.Navigatore;
 
 import javax.swing.*;
@@ -38,7 +36,7 @@ public class RegistrazioneView {
                         textField1.getText(),
                         textField2.getText(),
                         textField3.getText(),
-                        Arrays.toString(passwordField1.getPassword()),
+                        new String(passwordField1.getPassword()),
                         textField5.getText(),
                         textField4.getText()
                 );
@@ -51,10 +49,5 @@ public class RegistrazioneView {
                 }
             }
         );
-    }
-
-    static void main() {
-
-
     }
 }

@@ -34,6 +34,8 @@ public class AuthController {
             throw new UtenteGiaRegistratoException("Esiste già un account con questa email.");
         }
 
+        System.out.println("Password ricevuta: [" + datiPaziente.password() + "]");
+
         String passwordHash = PasswordUtils.generaPasswordHash(datiPaziente.password());
 
         Paziente nuovoPaziente = new Paziente();
@@ -57,6 +59,13 @@ public class AuthController {
         }
 
         List<Utente> utenti = gestorePersistenza.cercaPerCampo(Utente.class,"email", dati.email());
+        System.out.println("Trovati: " + utenti.size());
+        if (!utenti.isEmpty()) {
+            System.out.println("Email: " + utenti.getFirst().getEmail());
+            System.out.println("Hash: " + utenti.getFirst().getPasswordHash());
+            System.out.println("Ruolo: " + utenti.getFirst().getRuolo());
+            System.out.println("Classe: " + utenti.getFirst().getClass().getName());
+        }
 
         if (utenti.isEmpty()) {
             throw new CredenzialiNonValideException("Email o password non valida.");
