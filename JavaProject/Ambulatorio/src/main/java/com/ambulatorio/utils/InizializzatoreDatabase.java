@@ -46,7 +46,7 @@ public class InizializzatoreDatabase {
         medico1.setNome("Mario");
         medico1.setCognome("Rossi");
         medico1.setEmail("mario.rossi@gmail.com");
-        medico1.setPasswordHash(PasswordUtils.generaPasswordHash("mario"));
+        medico1.setPasswordHash(PasswordUtils.generaPasswordHash("mario1970"));
         medico1.setNumeroCellulare("3331234567");
         medico1.setSpecializzazione(cardiologia);
         medico1.setRuolo(Ruolo.MEDICO);
@@ -77,7 +77,7 @@ public class InizializzatoreDatabase {
         paziente1.setNome("Anna");
         paziente1.setCognome("Verdi");
         paziente1.setEmail("anna.verdi@gmail.com");
-        paziente1.setPasswordHash(PasswordUtils.generaPasswordHash("anna"));
+        paziente1.setPasswordHash(PasswordUtils.generaPasswordHash("anna1970"));
         paziente1.setCodiceFiscale("VRDNNA90A01H501Z");
         paziente1.setRuolo(Ruolo.PAZIENTE);
         gestore.salva(paziente1);
@@ -211,6 +211,72 @@ public class InizializzatoreDatabase {
                 LocalDate.of(2026, 6, 8),
                 StatoPrenotazione.PRENOTATA, StatoFascia.OCCUPATA);
 
+        // =========================================================================
+        // --- GIORNO PRECEDENTE ALL'ESAME: 22 GIUGNO 2026 (STORICO / PASSATO) ---
+        // =========================================================================
+
+        creaPrenotazione(gestore,
+                medico1, paziente1,
+                LocalDate.of(2026, 6, 22), LocalTime.of(14, 30),
+                LocalDate.of(2026, 6, 12),
+                StatoPrenotazione.EFFETTUATA, StatoFascia.OCCUPATA);
+
+        creaPrenotazione(gestore,
+                medico1, paziente2,
+                LocalDate.of(2026, 6, 22), LocalTime.of(16, 0),
+                LocalDate.of(2026, 6, 14),
+                StatoPrenotazione.NON_PRESENTATO, StatoFascia.OCCUPATA);
+
+        // =========================================================================
+        // --- GIORNO DELL'ESAME: 23 GIUGNO 2026 (MEDICO: MARIO ROSSI) ---
+        // =========================================================================
+        creaPrenotazione(gestore,
+                medico1, paziente1,
+                LocalDate.of(2026, 6, 23), LocalTime.of(9, 0),
+                LocalDate.of(2026, 6, 15),
+                StatoPrenotazione.PRENOTATA, StatoFascia.OCCUPATA);
+
+        creaPrenotazione(gestore,
+                medico1, paziente2,
+                LocalDate.of(2026, 6, 23), LocalTime.of(9, 30),
+                LocalDate.of(2026, 6, 16),
+                StatoPrenotazione.PRENOTATA, StatoFascia.OCCUPATA);
+
+        creaPrenotazione(gestore,
+                medico1, paziente3,
+                LocalDate.of(2026, 6, 23), LocalTime.of(10, 0),
+                LocalDate.of(2026, 6, 17),
+                StatoPrenotazione.PRENOTATA, StatoFascia.OCCUPATA);
+
+        creaPrenotazione(gestore,
+                medico1, paziente4,
+                LocalDate.of(2026, 6, 23), LocalTime.of(10, 30),
+                LocalDate.of(2026, 6, 18),
+                StatoPrenotazione.PRENOTATA, StatoFascia.OCCUPATA);
+
+        creaPrenotazione(gestore,
+                medico1, paziente1, // Il paziente 1 torna per un'altra visita
+                LocalDate.of(2026, 6, 23), LocalTime.of(11, 0),
+                LocalDate.of(2026, 6, 19),
+                StatoPrenotazione.PRENOTATA, StatoFascia.OCCUPATA);
+
+        // =========================================================================
+        // --- GIORNO SUCCESSIVO ALL'ESAME: 24 GIUGNO 2026 (FUTURO) ---
+        // =========================================================================
+
+        creaPrenotazione(gestore,
+                medico1, paziente3,
+                LocalDate.of(2026, 6, 24), LocalTime.of(9, 30),
+                LocalDate.of(2026, 6, 20),
+                StatoPrenotazione.PRENOTATA, StatoFascia.OCCUPATA);
+
+        creaPrenotazione(gestore,
+                medico1, paziente4,
+                LocalDate.of(2026, 6, 24), LocalTime.of(11, 0),
+                LocalDate.of(2026, 6, 20),
+                StatoPrenotazione.PRENOTATA, StatoFascia.OCCUPATA);
+
+        // =========================================================================
         // Fascia futura (prenotazione di oggi per domani)
         creaPrenotazione(gestore,
                 medico2, paziente3,

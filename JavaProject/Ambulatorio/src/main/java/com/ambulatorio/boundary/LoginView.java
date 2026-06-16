@@ -67,8 +67,8 @@ public class LoginView {
                         default:
                             throw new CredenzialiNonValideException("Token JWT corrotto");
                     }
-                } catch (CredenzialiNonValideException credException) {
-                    JOptionPane.showMessageDialog(contentPane,credException.getMessage(), "Errore di accesso", JOptionPane.ERROR_MESSAGE);
+                } catch (CredenzialiNonValideException | IllegalArgumentException ex) {
+                    JOptionPane.showMessageDialog(contentPane,ex.getMessage(), "Errore di accesso", JOptionPane.ERROR_MESSAGE);
                 }
 
             }
